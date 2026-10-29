@@ -1,0 +1,59 @@
+---
+import vertexSource from "../shaders/landing/fullscreen.vert?raw";
+import fragmentSource from "../shaders/landing/background.frag?raw";
+import renderer from "../scripts/topography.js?raw";
+---
+
+<div class="topography" id="topography" data-state="fallback">
+  <svg
+    class="fallback"
+    viewBox="0 0 1000 1000"
+    preserveAspectRatio="xMaxYMid meet"
+    aria-hidden="true"
+  >
+    <g fill="#8C9870" fill-rule="evenodd">
+      <path d="M500-100C250 70 420 235 260 430S130 775 365 960S890 1080 1120 920L1120 885C890 1050 600 1090 390 930S150 630 295 450S285 70 545-100Z" />
+      <path d="M620-80C365 65 550 230 390 420S260 700 470 875S970 940 1100 760L1100 710C920 925 685 1000 495 845S285 625 430 440S435 65 675-80Z" />
+      <path d="M680 100C555 125 650 270 570 390S440 555 545 650S810 760 905 635S815 445 835 315S795 75 680 100ZM685 142C615 160 700 285 610 415S505 550 580 610S780 710 850 625S760 440 790 310S760 120 685 142Z" />
+      <path d="M690 210C655 240 715 300 665 355S600 430 650 460S780 475 790 420S735 345 750 290S730 185 690 210Z" />
+      <path d="M530 680C420 690 445 805 565 855S795 880 805 795S690 775 655 735S595 665 530 680ZM545 720C485 720 495 785 580 820S755 835 755 800S675 815 625 765S585 715 545 720Z" />
+    </g>
+  </svg>
+  <canvas id="terrain-canvas" aria-hidden="true"></canvas>
+</div>
+
+<script is:inline id="terrain-vertex" type="x-shader/x-vertex" set:html={vertexSource} />
+<script is:inline id="terrain-fragment" type="x-shader/x-fragment" set:html={fragmentSource} />
+<script is:inline type="module" set:html={renderer} />
+
+<style>
+  .topography {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: #eae8dc;
+  }
+
+  canvas,
+  .fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  canvas {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  [data-state="ready"] canvas {
+    visibility: visible;
+  }
+
+  [data-state="ready"] .fallback {
+    visibility: hidden;
+  }
+</style>
