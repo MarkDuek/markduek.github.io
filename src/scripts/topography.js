@@ -57,6 +57,7 @@ function start() {
   const time = gl.getUniformLocation(program, "u_time");
   const pointer = gl.getUniformLocation(program, "u_pointer");
   const pressure = gl.getUniformLocation(program, "u_strength");
+  const scroll = gl.getUniformLocation(program, "u_scroll");
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const events = new AbortController();
   const listenerOptions = { passive: true, signal: events.signal };
@@ -98,6 +99,7 @@ function start() {
     gl.uniform1f(time, motion.matches ? 0 : elapsed);
     gl.uniform4f(pointer, px, py, motion.matches ? 0 : vx, motion.matches ? 0 : vy);
     gl.uniform1f(pressure, motion.matches ? 0 : strength);
+    gl.uniform1f(scroll, motion.matches ? 0 : window.scrollY / Math.min(rect.width, rect.height));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     surface.dataset.state = "ready";
   }

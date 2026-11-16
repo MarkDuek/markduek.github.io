@@ -9,6 +9,7 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
 >
   <main class="landing">
     <ShaderCanvas />
+    <div class="hero-space" aria-hidden="true"></div>
     <header class="identity">
       <h1><span>Mark</span> <span>Duek</span></h1>
       <p class="site-label">Projects &amp; curriculum</p>
@@ -28,7 +29,7 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
       </p>
       <nav aria-label="Main navigation">
         <a href="/about/"><span class="link-label"><span aria-hidden="true">01</span> About</span></a>
-        <a href="/projects/"><span class="link-label"><span aria-hidden="true">02</span> Projects</span></a>
+        <a href="#projects"><span class="link-label"><span aria-hidden="true">02</span> Projects</span></a>
         <a href="/cv/"><span class="link-label"><span aria-hidden="true">03</span> Curriculum Vitae</span></a>
       </nav>
     </section>
@@ -46,10 +47,18 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
         <span>GitHub</span>
       </a>
     </nav>
+    <section class="projects" id="projects" aria-labelledby="projects-title">
+      <h2 id="projects-title">Projects</h2>
+      <p>Project work will be listed here.</p>
+    </section>
   </main>
 </Document>
 
 <style>
+  :global(html) {
+    scroll-behavior: smooth;
+  }
+
   @font-face {
     font-family: "Climate Crisis";
     src: url("../assets/fonts/climate-crisis-latin.woff2") format("woff2");
@@ -61,6 +70,11 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
   .landing {
     position: relative;
     isolation: isolate;
+  }
+
+  .hero-space {
+    min-height: 100vh;
+    min-height: 100svh;
   }
 
   .identity {
@@ -189,6 +203,36 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
     margin-top: 0.5rem;
   }
 
+  .projects {
+    position: relative;
+    z-index: 3;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 2rem clamp(1.5rem, 5vw, 5rem);
+    color: #22291e;
+    font-family: "Arial Black", Arial, Helvetica, sans-serif;
+  }
+
+  .projects h2,
+  .projects p {
+    width: max-content;
+    max-width: 100%;
+    margin: 0;
+    background: #eae8dc;
+  }
+
+  .projects h2 {
+    font-size: 1.75rem;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .projects p {
+    margin-top: 0.75rem;
+    font: 400 0.875rem/1.1 Arial, Helvetica, sans-serif;
+    text-transform: uppercase;
+  }
+
   .social-links {
     width: auto;
     margin: 0;
@@ -245,6 +289,12 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
 
     .about nav {
       margin-top: 1.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html) {
+      scroll-behavior: auto;
     }
   }
 </style>

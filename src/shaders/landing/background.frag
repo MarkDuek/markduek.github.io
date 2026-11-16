@@ -5,6 +5,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform vec4 u_pointer;
 uniform float u_strength;
+uniform float u_scroll;
 
 uniform float u_pixel_scale;
 uniform sampler2D u_glyphs;
@@ -45,6 +46,7 @@ void main() {
   vec2 extent = u_resolution / size;
   vec2 cell = vec2(8.0, 12.0) * u_pixel_scale;
   vec2 p = (floor(gl_FragCoord.xy / cell) + 0.5) * cell / size;
+  p.y += u_scroll * 0.15;
   float t = u_time * 0.025;
   vec2 warp = vec2(
     terrainNoise(p * 1.6 + vec2(t, -t * 0.6)),
