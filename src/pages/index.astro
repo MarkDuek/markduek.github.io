@@ -5,9 +5,246 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
 
 <Document
   title="Mark Duek"
-  description="An interactive landscape of outward-flowing olive ribbons and liquid topographic blobs."
+  description="Mark Duek — about, projects, and curriculum vitae."
 >
-  <main aria-label="Interactive topographic landscape">
+  <main class="landing">
     <ShaderCanvas />
+    <header class="identity">
+      <h1><span>Mark</span> <span>Duek</span></h1>
+      <p class="site-label">Projects &amp; curriculum</p>
+    </header>
+    <section class="about" aria-labelledby="about-title">
+      <h2 id="about-title">about me</h2>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat.
+      </p>
+      <p>
+        Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+        dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+        proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      </p>
+      <nav aria-label="Main navigation">
+        <a href="/about/"><span class="link-label"><span aria-hidden="true">01</span> About</span></a>
+        <a href="/projects/"><span class="link-label"><span aria-hidden="true">02</span> Projects</span></a>
+        <a href="/cv/"><span class="link-label"><span aria-hidden="true">03</span> Curriculum Vitae</span></a>
+      </nav>
+    </section>
+    <nav class="social-links" aria-label="Social links">
+      <a href="https://www.linkedin.com/in/mark-duek/" aria-label="LinkedIn" title="LinkedIn">
+        <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+          <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854zM4.943 13.394V6.169H2.542v7.225zM3.743 5.182c.837 0 1.358-.554 1.358-1.248-.015-.709-.521-1.248-1.342-1.248S2.4 3.226 2.4 3.934c0 .694.521 1.248 1.327 1.248zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.251c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v-1.023H6.25c.03.678 0 7.225 0 7.225z" />
+        </svg>
+        <span>LinkedIn</span>
+      </a>
+      <a href="https://github.com/MarkDuek" aria-label="GitHub" title="GitHub">
+        <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8" />
+        </svg>
+        <span>GitHub</span>
+      </a>
+    </nav>
   </main>
 </Document>
+
+<style>
+  @font-face {
+    font-family: "Climate Crisis";
+    src: url("../assets/fonts/climate-crisis-latin.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+  }
+
+  .landing {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .identity {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 100vh;
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding: clamp(1.5rem, 5vw, 5rem);
+    color: #22291e;
+    text-align: right;
+    pointer-events: none;
+  }
+
+  h1 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    height: clamp(8rem, 22.4vw, 20rem);
+    font-family: "Climate Crisis", sans-serif;
+    font-size: calc(clamp(5rem, 14vw, 12.5rem) * 0.68);
+    font-weight: 400;
+    line-height: clamp(4rem, 11.2vw, 10rem);
+    letter-spacing: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+    /* Ivory minus green: difference blending yields green on ivory, light on black. */
+    color: #c8bfbe;
+    mix-blend-mode: difference;
+  }
+
+  h1 span {
+    display: block;
+  }
+
+  .site-label,
+  nav {
+    position: relative;
+    z-index: 3;
+  }
+
+  .site-label {
+    margin: 1rem 0 0;
+    background: #eae8dc;
+    font: 800 0.75rem/1.5 ui-monospace, "SFMono-Regular", Consolas, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    column-gap: 0.5rem;
+    width: 100%;
+    max-width: calc(100vw - 2 * clamp(1.5rem, 5vw, 5rem));
+    margin-top: 1rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 900;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  a {
+    color: inherit;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-block: 0.3rem;
+    text-decoration: none;
+    pointer-events: auto;
+    transition: color 150ms ease, transform 150ms ease;
+  }
+
+  .link-label {
+    display: grid;
+    grid-template-columns: 2ch auto;
+    column-gap: 0.4rem;
+    width: max-content;
+    background: #eae8dc;
+  }
+
+  a:hover,
+  a:focus-visible {
+    color: #b22222;
+    transform: scale(1.05);
+  }
+
+  .about {
+    position: relative;
+    z-index: 3;
+    padding: 2rem clamp(1.5rem, 5vw, 5rem);
+    background: #eae8dc;
+    color: #22291e;
+    font-family: "Arial Black", Arial, Helvetica, sans-serif;
+    font-weight: 900;
+  }
+
+  .about h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .about p {
+    margin: 0.75rem 0 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    text-align: justify;
+    text-transform: uppercase;
+    hyphens: auto;
+  }
+
+  .about p + p {
+    margin-top: 0.5rem;
+  }
+
+  .social-links {
+    width: auto;
+    margin: 0;
+    padding: 0 clamp(1.5rem, 5vw, 5rem) 2rem;
+    justify-content: flex-start;
+    gap: 1.5rem;
+    color: #22291e;
+    font: 700 0.75rem/1.5 Arial, Helvetica, sans-serif;
+  }
+
+  .social-links a {
+    min-width: 44px;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .social-links svg,
+  .social-links span {
+    background: #eae8dc;
+  }
+
+  @media (min-width: 900px) and (min-height: 650px) {
+    .social-links {
+      position: absolute;
+      bottom: 2rem;
+      left: clamp(1.5rem, 5vw, 5rem);
+      padding: 0;
+    }
+
+    .about {
+      position: absolute;
+      top: 4rem;
+      left: clamp(1.5rem, 5vw, 5rem);
+      width: min(26rem, 42vw);
+      padding: 0;
+    }
+  }
+
+  a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+  }
+
+  @media (max-height: 550px) {
+    .identity {
+      padding-block: 1rem;
+    }
+
+    h1 {
+      height: auto;
+      font-size: calc(clamp(2.5rem, 10vh, 4rem) * 0.68);
+      line-height: 0.9;
+    }
+
+    .about nav {
+      margin-top: 1.5rem;
+    }
+  }
+</style>

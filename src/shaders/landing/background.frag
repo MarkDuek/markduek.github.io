@@ -6,6 +6,9 @@ uniform float u_time;
 uniform vec4 u_pointer;
 uniform float u_strength;
 
+uniform float u_pixel_scale;
+uniform sampler2D u_glyphs;
+
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
@@ -40,7 +43,8 @@ float hill(vec2 p, vec2 center, vec2 radius) {
 void main() {
   float size = min(u_resolution.x, u_resolution.y);
   vec2 extent = u_resolution / size;
-  vec2 p = gl_FragCoord.xy / size;
+  vec2 cell = vec2(8.0, 12.0) * u_pixel_scale;
+  vec2 p = (floor(gl_FragCoord.xy / cell) + 0.5) * cell / size;
   float t = u_time * 0.025;
   vec2 warp = vec2(
     terrainNoise(p * 1.6 + vec2(t, -t * 0.6)),
@@ -73,10 +77,13 @@ void main() {
   float travelling = 0.5 + 0.5 * sin(q.x * 3.0 - q.y * 2.8 + band * 1.7 + u_time * 0.12);
   float envelope = 1.0 - smoothstep(3.1, 3.9, height);
   float halfWidth = (0.125 + travelling * 0.075) * envelope;
-  float aa = max(fwidth(elevation) * 0.65, 0.0001);
+  float aa = 0.03;
   float ribbon = 1.0 - smoothstep(max(0.0, halfWidth - aa), halfWidth + aa, distanceToBand);
   ribbon *= smoothstep(0.0, 0.08, envelope);
+  float glyph = floor(ribbon * 9.0 + 0.5);
+  vec2 uv = fract(gl_FragCoord.xy / cell);
+  float ink = texture2D(u_glyphs, vec2((glyph + uv.x) / 10.0, 1.0 - uv.y)).r;
   vec3 ivory = vec3(234.0, 232.0, 220.0) / 255.0;
-  vec3 olive = vec3(140.0, 152.0, 112.0) / 255.0;
-  gl_FragColor = vec4(mix(ivory, olive, ribbon), 1.0);
+  // Ivory cell backgrounds preserve character shapes beneath the blended title.
+  gl_FragColor = vec4(ivory * (1.0 - ink), step(0.01, ribbon));
 }

@@ -5,7 +5,8 @@ const surface = /** @type {HTMLElement} */ (document.getElementById("topography"
 
 function start() {
   const context = canvas.getContext("webgl", {
-    alpha: false,
+    alpha: true,
+    premultipliedAlpha: false,
     antialias: false,
     depth: false,
     stencil: false,
@@ -59,6 +60,27 @@ function start() {
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const events = new AbortController();
   const listenerOptions = { passive: true, signal: events.signal };
+  const pixelScale = gl.getUniformLocation(program, "u_pixel_scale");
+  const atlas = document.createElement("canvas");
+  atlas.width = 640;
+  atlas.height = 80;
+  const ink = atlas.getContext("2d");
+  const texture = gl.createTexture();
+  if (!ink || !texture) throw new Error("Unable to allocate the ASCII character atlas.");
+  ink.scale(4, 4);
+  ink.fillStyle = "black";
+  ink.fillRect(0, 0, 160, 20);
+  ink.fillStyle = "white";
+  ink.font = "16px monospace";
+  ink.textAlign = "center";
+  ink.textBaseline = "middle";
+  Array.from(" .:-=+269#").forEach((glyph, index) => ink.fillText(glyph, index * 16 + 8, 10));
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   let frame = 0;
   let lastFrame = performance.now();
   let elapsed = 0;
@@ -83,16 +105,18 @@ function start() {
   function resize() {
     rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
+    const sharp = matchMedia("(min-width: 900px) and (pointer: fine)").matches;
     const scale = Math.min(
       devicePixelRatio || 1,
-      1.5,
-      Math.sqrt(1_500_000 / (rect.width * rect.height)),
-      2048 / Math.max(rect.width, rect.height),
+      sharp ? 2 : 1.5,
+      Math.sqrt((sharp ? 4_000_000 : 1_500_000) / (rect.width * rect.height)),
+      (sharp ? 4096 : 2048) / Math.max(rect.width, rect.height),
     );
     canvas.width = Math.max(1, Math.floor(rect.width * scale));
     canvas.height = Math.max(1, Math.floor(rect.height * scale));
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform2f(resolution, canvas.width, canvas.height);
+    gl.uniform1f(pixelScale, canvas.width / rect.width);
     if (!document.hidden) draw();
   }
 
