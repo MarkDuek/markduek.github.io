@@ -1,0 +1,695 @@
+---
+import Document from "../../layouts/Document.astro";
+import mapImage from "../../assets/projects/deforestation-forecasting/deter-amazonia-legal.png";
+import mapDetail from "../../assets/projects/deforestation-forecasting/deter-amazonia-legal-detail.png";
+import pixelGrid from "../../assets/projects/deforestation-forecasting/deter-pixel-grid.png";
+import predictionDiagram from "../../assets/projects/deforestation-forecasting/prediction-diagram.jpg";
+import heatmap from "../../assets/projects/deforestation-forecasting/prediction-heatmap.jpg";
+import heatmapZoomOne from "../../assets/projects/deforestation-forecasting/prediction-heatmap-zoom-1.png";
+import heatmapZoomTwo from "../../assets/projects/deforestation-forecasting/prediction-heatmap-zoom-2.jpg";
+import simvpErrors from "../../assets/projects/deforestation-forecasting/simvp-errors.png";
+import modelErrorComparison from "../../assets/projects/deforestation-forecasting/model-error-comparison.jpeg";
+import simvpFramework from "../../assets/projects/deforestation-forecasting/simvp-framework.jpg";
+import simvpStructure from "../../assets/projects/deforestation-forecasting/simvp-structure.jpg";
+import simvpGsta from "../../assets/projects/deforestation-forecasting/simvp-gsta.jpg";
+import simvpOutputModification from "../../assets/projects/deforestation-forecasting/simvp-output-modification.png";
+import br163After from "../../assets/projects/deforestation-forecasting/br-163-2019-2021.png";
+import imazonOctoberChart from "../../assets/projects/deforestation-forecasting/imazon-october-degradation.png";
+import imazonYearChart from "../../assets/projects/deforestation-forecasting/imazon-2024-degradation.png";
+import amazonIndigenous from "../../assets/projects/deforestation-forecasting/amazon-indigenous.png";
+import bannerImage from "../../assets/projects/deforestation-forecasting/banner-image.png";
+---
+
+<Document
+  title="Deep Learning Model for Deforestation Prediction in the Brazilian Amazon Using Multitemporal Data — Mark Duek"
+  description="A deep-learning model for forecasting deforestation in the Brazilian Amazon."
+>
+  <main>
+    <nav><a href="/#projects">← Projects</a></nav>
+    <header class="project-header">
+      <div class="title-block">
+        <div class="project-info">
+          <span>Stone Labs, PUC-Rio</span>
+          <time>Dec. 2024</time>
+          <em>Deep Learning, Time Series, Geospatial Data, Remote Sensing</em>
+        </div>
+        <h1>Deep Learning Model for Deforestation Prediction in the Brazilian Amazon Using Multitemporal Data</h1>
+      </div>
+    </header>
+    <div class="project-meta">
+      <p class="lede">A computer-vision approach to spatiotemporal video prediction, forecasting Amazon deforestation risk from multitemporal DETER alerts with SimVPv2.</p>
+      <p class="downloads"><a href="/documents/deforestation-forecasting-slides.pdf" download>Download slides (PDF)</a><a href="/documents/deforestation-forecasting-manuscript.pdf" download>Download manuscript (PDF)</a></p>
+      <p class="availability">Code is not available: this project was developed internally in a lab.</p>
+    </div>
+    <aside class="contents" aria-label="On this page" hidden>
+      <p>Contents</p>
+      <a href="#introduction">1. Introduction</a>
+      <a href="#current-situation">2. Current Situation</a>
+      <a class="subsection" href="#deter-data">2.1 DETER Data</a>
+      <a class="subsection" href="#simvpv2">2.2 SimVPv2</a>
+      <a class="subsection detail" href="#formal-definition">2.2.1 Formal Definition</a>
+      <a href="#proposal">3. Proposal</a>
+      <a class="subsection" href="#data-transformation">3.1 Data Transformation</a>
+      <a class="subsection" href="#patches">3.2 Patches</a>
+      <a class="subsection" href="#model-modifications">3.3 Model Modifications</a>
+      <a class="subsection" href="#loss-function">3.4 Loss Function</a>
+      <a href="#results">4. Results</a>
+      <a class="subsection" href="#visualizations">4.1 Georeferenced Visualizations</a>
+      <a class="subsection" href="#error-measures">4.2 Error Measures</a>
+      <a class="subsection" href="#model-evaluation">4.3 Model Evaluation</a>
+      <a class="subsection" href="#model-comparison">4.4 Model Comparison</a>
+      <a href="#conclusion">5. Conclusion</a>
+      <a href="#references">References</a>
+    </aside>
+
+    <section class="introduction">
+      <div>
+        <h2 id="introduction">1. Introduction</h2>
+        <div class="pre-introduction-image">
+          <img src={bannerImage.src} alt="Amazon river and forest." />
+        </div>
+        <figure>
+          <img src="/projects/br163-deforestation-2000-2019.webp" alt="Animated satellite imagery showing deforestation along BR-163 from 2000 to 2019." />
+          <figcaption>BR-163 deforestation, 2000–2019.</figcaption>
+        </figure>
+        <p>In recent decades, deforestation has become a central international concern because of its increasingly perceptible effects on climate, biodiversity, and human wellbeing. The issue is especially significant in Brazil, which, together with Bolivia, Colombia, Ecuador, Guyana, Peru, Suriname, Venezuela, and French Guiana, contains the Amazon—the world’s largest rainforest.</p>
+        <p>According to the Amazon Institute of People and the Environment (Imazon), the Amazon recorded alarming levels of deforestation and forest degradation in 2024 <a class="citation" href="#ref-1">[1]</a>.</p>
+        <p>The most recent data reveal a critical situation. In October 2024, the Amazon registered its fifth consecutive month of growth in deforestation and degradation, the latter intensified by fires and logging. In that month alone, 6,623 km² were degraded, equivalent to four times the city of São Paulo. From January to October 2024, degradation reached 32,869 km², equivalent to 21 times São Paulo—or about 10,000 football fields per day. This was the worst situation in 15 years and almost three times the previous historical record, 11,453 km² in 2017. Although only about 10% of the accumulated total represents deforested areas, it remains a critical concern because it opens affected regions to exploitation <a class="citation" href="#ref-2">[2]</a>.</p>
+        <div class="intro-evidence">
+          <figure><img src={imazonOctoberChart.src} alt="Imazon chart of October forest degradation from 2009 to 2024." /><figcaption>October degradation series.</figcaption></figure>
+          <figure><img src={imazonYearChart.src} alt="Imazon chart of forest degradation from January to October, 2009 to 2024." /><figcaption>January–October degradation cumulative series.</figcaption></figure>
+        </div>
+        <p>This scenario demonstrates the urgent need to confront the challenges of preserving the Amazon, one of the world’s richest and most essential ecosystems. It is fundamental to global biodiversity, mitigates climate change, and sustains the ways of life of Indigenous and traditional communities.</p>
+        <figure class="intro-image">
+          <img src={amazonIndigenous.src} alt="Indigenous child in the Amazon." />
+        </figure>
+        <p>Compared with other forms of action, forecasting plays a crucial role in preserving the Amazon. The ability to predict where and when forest degradation will occur allows authorities and conservation organisations to act preventively, allocate resources more efficiently, and direct inspection efforts to the most threatened areas. In addition, forecasting can facilitate more effective public policies and mitigation measures before destruction causes irreparable damage. Anticipating deforestation events is therefore an indispensable strategic tool in the fight against environmental degradation.</p>
+        <p>In this context, the proposed work develops and evaluates a deep-learning model for forecasting deforestation areas, making it possible to anticipate and more effectively combat adverse impacts on this vital ecosystem. It treats the problem as video prediction: spatial-temporal data generate maps forecasting risk hotspots, placing the task in a form widely studied by the academic community.</p>
+        <p>The adopted model is SimVPv2, an improved version of SimVP <a class="citation" href="#ref-3">[3]</a>, proposed as a simple yet powerful approach to spatiotemporal predictive learning <a class="citation" href="#ref-4">[4]</a>. It addresses limitations of neural networks for video prediction, including computational efficiency and the accurate modelling of spatiotemporal patterns. This is the central problem of this work.</p>
+      </div>
+    </section>
+
+    <div class="slide-stack">
+      <figure class="text-figure">
+        <img src={br163After.src} alt="Satellite image of deforestation along BR-163 in 2019 and 2021." />
+        <figcaption>BR-163 in 2019 and 2021.</figcaption>
+      </figure>
+    </div>
+
+    <section>
+      <h2 id="current-situation">2. Current Situation</h2>
+      <p>The growing devastation of the Amazon, as described in the previous section, requires solutions that combine speed, precision, and scalability in monitoring and forecasting risk areas. Several detection and alert systems have been developed to meet this need; one of the most widely used is DETER (Near Real-Time Deforestation Detection), from the National Institute for Space Research (INPE) <a class="citation" href="#ref-5">[5]</a>.</p>
+    </section>
+
+    <section>
+      <h3 id="deter-data">2.1 DETER Data</h3>
+      <p>DETER is an INPE near-real-time system that monitors and identifies deforested or degraded forest areas in the Amazon from satellite imagery. Its MODIS sensor aboard the Terra satellite provides daily updates, but its 250-metre spatial resolution limits detection of smaller areas and detailed degradation patterns <a class="citation" href="#ref-5">[5]</a>.</p>
+      <p>This work uses data available through TerraBrasilis, including degradation and logging alerts in the Legal Amazon since 2016 <a class="citation" href="#ref-6">[6]</a>. TerraBrasilis is an INPE web platform for access, consultation, analysis, and dissemination of spatial data generated by governmental environmental-monitoring programmes such as PRODES and DETER. These data are based on imagery from satellites such as Landsat, enabling the mapping and quantification of areas alerted by DETER <a class="citation" href="#ref-7">[7]</a>.</p>
+      <p>DETER data are supplied as shapefiles (<code>*.shp</code>), a format widely used in geographic information systems. They contain spatial information represented by polygons delimiting alerted deforestation areas. Each polygon is associated with tabular attributes, including alert date, extent of deforested area, and land-use category. QGIS enables the data to be viewed georeferentially, facilitating spatial analysis and visual interpretation.</p>
+    </section>
+
+    <figure>
+      <img src={mapImage.src} alt="Legal Amazon map with DETER deforestation alerts." />
+      <figcaption>Georeferenced visualisation of DETER data <a class="citation" href="#ref-7">[7]</a>.</figcaption>
+    </figure>
+
+    <figure>
+      <img src={mapDetail.src} alt="Detail of DETER alert polygons across the Legal Amazon." />
+      <figcaption>Detail of DETER alert polygons delimiting deforested areas.</figcaption>
+    </figure>
+
+    <section>
+      <h3 id="simvpv2">2.2 SimVPv2</h3>
+      <p>Deep-learning models play a fundamental role in forecasting tasks, particularly image and video analysis. ResUNet <a class="citation" href="#ref-8">[8]</a>, DeepLabV3 <a class="citation" href="#ref-9">[9]</a>, and Swin U-Net <a class="citation" href="#ref-10">[10]</a> are effective for segmentation and modelling complex high-dimensional patterns: ResUNet combines residual networks with U-Net; DeepLabV3 uses dilated convolutions to capture broad context; and Swin U-Net applies transformers to model global spatial relationships. This work implements SimVPv2 because it captures spatiotemporal interactions in video sequences and is therefore suited to deforestation forecasting <a class="citation" href="#ref-4">[4]</a>.</p>
+      <h4 id="formal-definition">2.2.1 Formal Definition</h4>
+      <p>Following the formal definition of SimVPv2 for a spatiotemporal predictive-learning problem, given a video sequence <math><msub><mi>X</mi><mrow><mi>t</mi><mo>,</mo><mi>T</mi></mrow></msub></math> at time <math><mi>t</mi></math>, with <math><mi>T</mi></math> past frames, the objective is to predict the next <math><msup><mi>T</mi><mo>′</mo></msup></math> frames <math><msub><mi>Y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><msup><mi>T</mi><mo>′</mo></msup></mrow></msub></math> from time <math><mi>t</mi><mo>+</mo><mn>1</mn></math>, where <math><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math> is generally an image with <math><mi>C</mi></math> channels, height <math><mi>H</mi></math>, and width <math><mi>W</mi></math>. In practice, observed input sequences and predicted sequences are represented as tensors: <math><msub><mi>X</mi><mrow><mi>t</mi><mo>,</mo><mi>T</mi></mrow></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>T</mi><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math> and <math><msub><mi>Y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><msup><mi>T</mi><mo>′</mo></msup></mrow></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><msup><mi>T</mi><mo>′</mo></msup><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math>.</p>
+      <math display="block" aria-label="F subscript theta maps X subscript t T to Y subscript t plus 1 T prime"><msub><mi>F</mi><mi>Θ</mi></msub><mo>:</mo><msub><mi>X</mi><mrow><mi>t</mi><mo>,</mo><mi>T</mi></mrow></msub><mo>→</mo><msub><mi>Y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><msup><mi>T</mi><mo>′</mo></msup></mrow></msub></math>
+      <p>The model learns this mapping, with parameters <math><mi>Θ</mi></math>, by exploring both spatial and temporal dependencies. In SimVP, <math><msub><mi>F</mi><mi>Θ</mi></msub></math> is a neural-network model trained to minimise the difference between predicted future frames and ground-truth future frames. The optimal parameters are:</p>
+      <math display="block" aria-label="theta star equals arg min theta of L of F theta X t T comma Y t plus 1 T prime"><msup><mi>Θ</mi><mo>*</mo></msup><mo>=</mo><munder><mi>arg min</mi><mi>Θ</mi></munder><mi>L</mi><mo>(</mo><msub><mi>F</mi><mi>Θ</mi></msub><mo>(</mo><msub><mi>X</mi><mrow><mi>t</mi><mo>,</mo><mi>T</mi></mrow></msub><mo>)</mo><mo>,</mo><msub><mi>Y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><msup><mi>T</mi><mo>′</mo></msup></mrow></msub><mo>)</mo></math>
+      <p>Here, <math><mi>L</mi></math> is a loss function that evaluates these differences.</p>
+      <h4>2.2.2 Model Layers</h4>
+      <p>This mapping is performed by convolutional layers organised into three principal components: Input/Output, Spatial Encoder/Decoder, and Translator.</p>
+    </section>
+
+    <figure>
+      <img src={simvpFramework.src} alt="SimVPv2 framework with spatial encoder, translator, and spatial decoder." />
+      <figcaption>SimVPv2 framework <a class="citation" href="#ref-4">[4]</a>.</figcaption>
+    </figure>
+
+    <section>
+      <h4>Input/Output</h4>
+      <p>The model receives a five-dimensional tensor, <math><mi>B</mi><mo>×</mo><mi>T</mi><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></math>, corresponding to a sequence of video frames. <math><mi>B</mi></math> is a batch of samples; <math><mi>T</mi></math> is the sequence of frame times; <math><mi>C</mi></math> denotes image channels; and <math><mi>H</mi></math> and <math><mi>W</mi></math> are frame height and width. These dimensions encompass the information needed for temporal and spatial video processing. The model ultimately outputs a five-dimensional tensor of the same form, representing the predicted video sequence.</p>
+      <h4>Spatial Encoder/Decoder</h4>
+      <p>The spatial encoder transforms the originally high-dimensional past frames into a low-dimensional latent space. For the encoder and decoder, input tensors are reshaped to <math><mo>(</mo><mi>B</mi><mo>×</mo><mi>T</mi><mo>)</mo><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></math>. This allows each frame to be treated independently as a sample, concentrating processing on spatial features without considering temporal variation.</p>
+    </section>
+
+    <figure>
+      <img src={simvpStructure.src} alt="Tensor dimensionality structure of SimVPv2." />
+      <figcaption>SimVPv2 tensor dimensionality structure <a class="citation" href="#ref-4">[4]</a>.</figcaption>
+    </figure>
+
+    <section>
+      <h4>Encoder</h4>
+      <p>The spatial encoder uses <math><msub><mi>N</mi><mi>s</mi></msub></math> simple convolutional layers (Conv2d in PyTorch), while the spatial decoder uses <math><msub><mi>N</mi><mi>s</mi></msub></math> upsampling layers (PixelShuffle in PyTorch). The spatial encoder operation <math><mi>f</mi></math> is:</p>
+      <math display="block" aria-label="z sub i equals sigma of Norm2d of Conv2d of z sub i minus 1"><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>σ</mi><mo>(</mo><mtext>Norm2d</mtext><mo>(</mo><mtext>Conv2d</mtext><mo>(</mo><msub><mi>z</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>)</mo><mo>)</mo><mo>)</mo><mo>,</mo><mspace width="0.5em"/><mn>1</mn><mo>≤</mo><mi>i</mi><mo>≤</mo><msub><mi>N</mi><mi>s</mi></msub></math>
+      <p>Here, <math><mi>σ</mi></math> is a nonlinear activation function; <math><mtext>Norm2d</mtext></math> is a normalisation layer; and <math><msub><mi>z</mi><mn>0</mn></msub></math> is the input tensor, <math><msub><mi>z</mi><mn>0</mn></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mo>(</mo><mi>B</mi><mo>×</mo><mi>T</mi><mo>)</mo><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math>. Convolutional layers have stride one except for downsampling layers, whose stride is two. Downsampling is applied once every two convolutional layers.</p>
+      <h4>Decoder</h4>
+      <p>In the spatial decoder <math><msup><mi>f</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></math>, latent representations are reconstructed as:</p>
+      <math display="block" aria-label="z sub k equals sigma of Norm2d of unConv2d of z sub k minus 1"><msub><mi>z</mi><mi>k</mi></msub><mo>=</mo><mi>σ</mi><mo>(</mo><mtext>Norm2d</mtext><mo>(</mo><mtext>unConv2d</mtext><mo>(</mo><msub><mi>z</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>)</mo><mo>)</mo><mo>)</mo><mo>,</mo><mspace width="0.5em"/><msub><mi>N</mi><mi>s</mi></msub><mo>+</mo><msub><mi>N</mi><mi>t</mi></msub><mo>&lt;</mo><mi>k</mi><mo>≤</mo><mn>2</mn><msub><mi>N</mi><mi>s</mi></msub><mo>+</mo><msub><mi>N</mi><mi>t</mi></msub></math>
+      <p>Here, <math><mi>σ</mi></math> is a nonlinear activation function, <math><mtext>Norm2d</mtext></math> is a normalisation layer, and <math><mtext>unConv2d</mtext></math> is an upsampling convolutional layer. As in the encoder, upsampling occurs once every two convolutional layers. This approach enables the spatial encoder and decoder to capture and reconstruct the spatial details of each frame efficiently while maintaining a simple, direct structure.</p>
+      <h4>Translator</h4>
+      <p>The intermediate component, called the spatiotemporal translator, captures both spatial dependencies and temporal variation in latent space. It consists of <math><msub><mi>N</mi><mi>t</mi></msub></math> temporal modules, whose hidden representations are:</p>
+      <math display="block" aria-label="z sub j equals TemporalModule of z sub i minus 1"><msub><mi>z</mi><mi>j</mi></msub><mo>=</mo><mtext>TemporalModule</mtext><mo>(</mo><msub><mi>z</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>)</mo><mo>,</mo><mspace width="0.5em"/><msub><mi>N</mi><mi>s</mi></msub><mo>&lt;</mo><mi>j</mi><mo>≤</mo><msub><mi>N</mi><mi>s</mi></msub><mo>+</mo><msub><mi>N</mi><mi>t</mi></msub></math>
+      <p>Here, <math><msub><mi>z</mi><mrow><msub><mi>N</mi><mi>s</mi></msub><mo>−</mo><mn>1</mn></mrow></msub></math> is the spatial encoder output. These hidden representations are reshaped to <math><mi>B</mi><mo>×</mo><mo>(</mo><mi>T</mi><mo>×</mo><mi>C</mi><mo>)</mo><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></math>, organising features from multiple frames along the temporal axis. This forces the temporal module, designed with convolutional networks, to learn from stacks of features from multiple frames; it can therefore capture the intrinsic temporal evolution in sequential data.</p>
+      <h4>Gated Spatiotemporal Attention Module</h4>
+      <p>The Gated Spatiotemporal Attention Module comprises depth-wise convolution, dilated depth-wise convolution, and channel-wise convolution. They respectively capture local receptive fields within channels, establish long-range spatial-temporal connections, and integrate extracted features across channels.</p>
+    </section>
+
+    <figure>
+      <img src={simvpGsta.src} alt="Gated Spatiotemporal Attention Module architecture." />
+      <figcaption>Gated Spatiotemporal Attention Module of SimVPv2 <a class="citation" href="#ref-4">[4]</a>.</figcaption>
+    </figure>
+
+    <section>
+      <h4>Mapping Function</h4>
+      <p>This combination of convolutions allows the model to integrate spatial and temporal information efficiently and comprehensively.</p>
+      <p>The mapping function is the composition of the model components:</p>
+      <math display="block" aria-label="F theta equals f inverse composition h composition f"><msub><mi>F</mi><mi>Θ</mi></msub><mo>=</mo><msup><mi>f</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo>∘</mo><mi>h</mi><mo>∘</mo><mi>f</mi></math>
+      <p>Here, <math><mi>f</mi></math> is the spatial encoder, <math><mi>h</mi></math> is the spatiotemporal translator, <math><msup><mi>f</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></math> is the spatial decoder, and <math><mo>∘</mo></math> denotes function composition. A residual connection between the first encoder layer and the final decoder layer preserves spatial features.</p>
+    </section>
+
+    <section>
+      <h2 id="proposal">3. Proposal</h2>
+      <p>This work proposes integrating DETER-system data with the SimVP predictive model to create a solution capable of forecasting temporal patterns in spatial data. Its principal objective is to use DETER information together with SimVP’s efficiency and simplicity to produce forecasts that assist environmental monitoring, including deforestation and other land-use changes.</p>
+      <h3 id="data-transformation">3.1 Data Transformation</h3>
+      <p>To achieve this objective, the first step is to transform DETER data into a format resembling a video sequence. The following steps are used:</p>
+      <ul>
+        <li><strong>Regular-grid creation:</strong> using the legal boundaries of the Amazon, a 1 km² grid is generated, where each square is treated as a pixel.</li>
+        <li><strong>Coordinate-system conversion:</strong> DETER data are converted from EPSG:4674 (degrees) to EPSG:5880 (metres), providing greater spatial precision and grid uniformity.</li>
+        <li><strong>Temporal grouping:</strong> data are organised into biweekly frames; polygon spatial features are dissolved and consolidated inside their respective pixel and time frame.</li>
+      </ul>
+      <p>The DETER data are then organised into channels so that the model can capture different aspects of deforestation information. Alert polygons are segmented and evaluated within each grid pixel, producing the following channels:</p>
+      <ol>
+        <li><strong>Deforestation history:</strong> past deforestation values over the previous eight periods, providing a temporal view of alert progression.</li>
+        <li><strong>Normalised deforestation-polygon count:</strong> the number of polygons detected in each period, normalised for consistent comparison.</li>
+        <li><strong>Cumulative deforestation-alert area:</strong> the sum of alerted areas in preceding periods.</li>
+        <li><strong>Alerted-area difference series:</strong> variation in deforestation area between consecutive periods.</li>
+        <li><strong>Moving-average seasonality factor:</strong> seasonal patterns that influence deforestation.</li>
+      </ol>
+      <p>These layers provide a rich, detailed base of structured data, enabling more accurate analysis and prediction of spatial and temporal deforestation change.</p>
+      <h3 id="patches">3.2 Patches</h3>
+      <p>The overall Amazon image is segmented into patches with the following characteristics: height <math><mi>H</mi><mo>=</mo><mn>128</mn></math> pixels on the Y axis; width <math><mi>W</mi><mo>=</mo><mn>128</mn></math> pixels on the X axis; five channels <math><mi>C</mi></math>; and eight periods <math><mi>T</mi></math>. These patches are SimVP inputs, providing a rich, detailed structure that enables the model to capture both spatial and temporal dependencies. This approach also incorporates seasonality and historical deforestation patterns, enriching predictive capability.</p>
+      <p>By transforming DETER data into a structured sequence of temporal frames, each pixel represents a spatial unit while each temporal frame reflects the data state over a biweekly interval. This organisation is fundamental to feeding SimVP, which operates efficiently with inputs formatted like videos.</p>
+    </section>
+
+    <figure>
+      <img src={pixelGrid.src} alt="One-square-kilometre pixel grid over the Legal Amazon, with DETER alert polygons." />
+      <figcaption>One-square-kilometre pixel grid over DETER alerts.</figcaption>
+    </figure>
+
+    <figure>
+      <img src={predictionDiagram.src} alt="Diagram showing a spatial-temporal input tensor transformed into a prediction tensor." />
+      <figcaption>From historical frames to a single predicted map.</figcaption>
+    </figure>
+
+    <section>
+      <h3 id="model-modifications">3.3 Model Modifications</h3>
+      <p>Finally, SimVP must be modified so that its sequential output generates a single image. This changes the model mapping to <math><msub><mi>F</mi><mi>Θ</mi></msub><mo>:</mo><msub><mi>X</mi><mrow><mi>t</mi><mo>,</mo><mi>T</mi></mrow></msub><mo>→</mo><msub><mi>Y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub></math>, where <math><msub><mi>Y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo>{</mo><msub><mi>x</mi><mi>i</mi></msub><mo>}</mo><mn>1</mn></math>. Two measures are required:</p>
+      <ol>
+        <li><strong>Output-dimension change:</strong> the current output <math><mi>B</mi><mo>×</mo><mi>T</mi><mo>×</mo><mi>C</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></math> is adjusted to <math><mi>B</mi><mo>×</mo><mo>(</mo><mi>T</mi><mo>×</mo><mi>C</mi><mo>)</mo><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></math>, combining the temporal and channel dimensions.</li>
+        <li><strong>Regression-layer addition:</strong> a regression head implemented with a fully connected network applies a <math><mn>1</mn><mo>×</mo><mn>1</mn></math> convolution, mapping the combined <math><mi>T</mi><mo>×</mo><mi>C</mi></math> layers to one output channel.</li>
+      </ol>
+      <math display="block" aria-label="B times T times C times H times W maps to B times T times C times H times W, then to B times 1 times H times W">
+        <mi>B</mi><mo>×</mo><mo>(</mo><mi>T</mi><mo>×</mo><mi>C</mi><mo>)</mo><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi><mo>→</mo><mi>B</mi><mo>×</mo><mn>1</mn><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi>
+      </math>
+      <p>A regression head, implemented as a fully connected 1 × 1 convolution, maps the combined <math><mi>T</mi><mo>×</mo><mi>C</mi></math> layers to a single output channel:</p>
+      <math display="block" aria-label="Y equals Conv2D of T times C with kernel one">
+        <mi>Y</mi><mo>=</mo><mi>Conv2D</mi><mo>(</mo><mi>T</mi><mo>×</mo><mi>C</mi><mo>,</mo><mi>kernel</mi><mo>=</mo><mn>1</mn><mo>)</mo>
+      </math>
+      <p>These changes allow SimVP to produce a single consolidated image as output while preserving the integrity of information extracted from the input sequences.</p>
+    </section>
+
+    <figure>
+      <img src={simvpOutputModification.src} alt="Diagram of the modified SimVP pipeline, from dataset input through encoder, translator, decoder, and regression head to one output." />
+      <figcaption>Modification of SimVP output with a regression head.</figcaption>
+    </figure>
+
+    <section>
+      <h3 id="loss-function">3.4 Loss Function</h3>
+      <p>Weighted mean squared error was selected for deforestation-area prediction because it is necessary to emphasise deforested regions. Most of the map shows no change, which could unbalance the model by favouring null predictions that minimise mean error. WMSE addresses this problem by penalising errors in critical areas more severely, ensuring relevant patterns are captured more accurately without empty areas exerting disproportionate influence:</p>
+      <math display="block" aria-label="Weighted MSE equals the sum of w sub i times y sub i minus y hat sub i squared, divided by the sum of w sub i">
+        <mtext>WMSE</mtext><mo>=</mo><mfrac><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>w</mi><mi>i</mi></msub><mo>(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo>)</mo><msup><mn>2</mn></msup></mrow><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>w</mi><mi>i</mi></msub></mrow></mfrac>
+      </math>
+      <p>Here, <math><msub><mi>y</mi><mi>i</mi></msub></math> is the actual value, <math><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub></math> the predicted value, <math><msub><mi>w</mi><mi>i</mi></msub></math> the contextual-mask weight associated with the <math><mi>i</mi></math>-th datum, and <math><mi>n</mi></math> the total number of samples. In this case, standard MSE is calculated without reduction; a conditional mask assigns greater weights to deforestation regions, and weighted errors are normalised by the sum of their weights. This directs learning towards areas of greatest importance despite a dataset dominated by unchanged areas.</p>
+      <p>WMSE is a variation of MSE that uses adaptive weights based on contextual data to prioritise the most relevant regions. This approach enables the model to capture deforestation patterns in the regions of interest more precisely, even where most data correspond to areas without change. WMSE makes learning robust and directed toward the most important regions.</p>
+    </section>
+
+    <section>
+      <h2 id="results">4. Results</h2>
+      <h3 id="visualizations">4.1 Georeferenced Visualizations</h3>
+      <p>To validate the proposed model, experiments were conducted with DETER data processed in patches. Results are analysed from performance metrics and georeferenced visualisations.</p>
+      <p>Georeferenced visualisations are fundamental to spatial-data analysis because they make patterns and variation intuitive to understand. Heatmaps compare real data (ground truth) with model predictions by translating numerical information into intensity representations, facilitating identification of agreement and discrepancy between predicted and actual values.</p>
+      <p>Heatmaps are generated from values associated with each georeferenced pixel, representing predicted and actual deforestation-area intensities. This supports model validation and provides insight into its effectiveness at capturing spatial and temporal patterns in different regions, while allowing critical areas to be visually explored.</p>
+      <p>In the heatmaps below, high-deforestation points in the actual data correspond to intensity peaks in predicted areas. These areas of greater concentration represent the most significant deforestation regions; values gradually decrease around them, producing a smooth transition. This is essential evidence that the model identifies critical regions and captures their nearby spatial context.</p>
+    </section>
+
+    <figure>
+      <img src={heatmap.src} alt="Comparison of observed deforestation alerts and the SimVPv2 prediction heatmap." />
+      <figcaption>Deforestation hotspots: label and prediction.</figcaption>
+    </figure>
+
+    <div class="image-pair">
+      <figure>
+        <img src={heatmapZoomOne.src} alt="Close-up comparison of observed and predicted deforestation heatmaps." />
+        <figcaption>Deforestation hotspots: detail one.</figcaption>
+      </figure>
+      <figure>
+        <img src={heatmapZoomTwo.src} alt="Second close-up comparison of observed and predicted deforestation heatmaps." />
+        <figcaption>Deforestation hotspots: detail two.</figcaption>
+      </figure>
+    </div>
+
+    <section>
+      <h3 id="error-measures">4.2 Error Measures</h3>
+      <p>Quantitative evaluation uses RMSE (root mean square error) and MAE (mean absolute error), both widely used to measure forecasting-model accuracy.</p>
+      <h4>RMSE</h4>
+      <p>RMSE measures the mean squared error between predictions and actual values, then takes its square root:</p>
+      <math display="block" aria-label="RMSE equals the square root of one over n times the sum of y sub i minus y hat sub i squared">
+        <mtext>RMSE</mtext><mo>=</mo><msqrt><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo>(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo>)</mo><msup><mn>2</mn></msup></msqrt>
+      </math>
+      <p>In this expression, <math><msub><mi>y</mi><mi>i</mi></msub></math> is the actual value, <math><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub></math> is the predicted value, and <math><mi>n</mi></math> is the total number of samples. RMSE is sensitive to large errors because squaring penalises larger deviations more severely; this makes it useful for identifying models that minimise major discrepancies, although it can be influenced by outliers.</p>
+      <h4>MAE</h4>
+      <p>MAE measures the mean absolute error between predicted and actual values:</p>
+      <math display="block" aria-label="MAE equals one over n times the sum of the absolute value of y sub i minus y hat sub i">
+        <mtext>MAE</mtext><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo>|</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo>|</mo>
+      </math>
+      <p>Here, <math><msub><mi>y</mi><mi>i</mi></msub></math>, <math><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub></math>, and <math><mi>n</mi></math> have the same meanings. MAE is less sensitive to outliers because it uses absolute rather than squared error, giving a more direct interpretation of mean error in the data’s units.</p>
+      <h3 id="model-evaluation">4.3 Model Evaluation</h3>
+      <p>The charts show SimVPv2 RMSE and MAE across biweekly intervals. RMSE starts near 0.026, peaks close to 0.027, and falls to about 0.023. The increase in the tenth fortnight coincides with the start of the dry season (the Amazonian winter), when validation data show a significant rise in deforested area and the model faces a more difficult forecasting problem. Despite these increases, the overall value remains relatively low, suggesting acceptable performance in capturing the principal data characteristics.</p>
+      <p>MAE follows a pattern similar to RMSE, increasing in the same critical periods but remaining slightly lower because it is less sensitive to large discrepancies. Its values range from 0.019 to 0.021, with peaks aligned with periods of greater deforestation activity. This relationship shows that the model faces challenges during high-impact seasonal periods but remains consistent in forecasting general patterns.</p>
+      <p>These results underscore the robustness of the model and indicate opportunities for adjustments that account for seasonal factors and abrupt changes in deforestation.</p>
+    </section>
+
+    <figure>
+      <img src={simvpErrors.src} alt="SimVPv2 RMSE and MAE values across biweekly evaluation periods." />
+      <figcaption>SimVPv2 error variation across biweekly periods.</figcaption>
+    </figure>
+
+    <section>
+      <h3 id="model-comparison">4.4 Model Comparison</h3>
+      <p>All evaluated models—DeepLabV3+, ResUNet, Swin-UNet, and SimVPv2—follow the data’s seasonal trend, with error peaks during the Amazon dry season. This reflects the greater complexity of forecasting critical periods, when deforestation rates rise substantially. SimVPv2 has slightly higher error than the other models, partly because dataset adjustments produced less informative training data. Nevertheless, it remains competitive not only in error metrics but particularly in the quality of the generated visualisations, which clearly and in detail represent relevant spatial patterns.</p>
+    </section>
+
+    <figure>
+      <img src={modelErrorComparison.src} alt="RMSE and MAE comparison of DeepLabV3+, ResUNet, Swin-UNet, and SimVPv2." />
+      <figcaption>Error comparison with DeepLabV3+, ResUNet, and Swin-UNet.</figcaption>
+    </figure>
+
+    <section>
+      <h2 id="conclusion">5. Conclusion</h2>
+      <p>This work implemented and analysed SimVPv2 for forecasting deforestation areas using spatiotemporal data. Its performance was compared with other models, including DeepLabV3+, ResUNet, and Swin-UNet, demonstrating its competitiveness both in error metrics and in the quality of generated forecasts. This analysis highlighted SimVPv2’s potential as an effective environmental-monitoring tool, even given the challenges imposed by the problem’s complexity.</p>
+      <p>Given the scope of the topic, several possibilities remain for improving and adjusting the model. Performance can be improved through fine-tuning, optimising hyperparameters such as learning rate and number of layers. These adjustments can increase the model’s ability to capture complex patterns and subtler dynamics present in the data.</p>
+      <p>As a continuation for future work, the dataset can be expanded by including additional variables, such as climatic and socioeconomic data, which have a significant effect on deforestation patterns. In addition, exploring mobile devices for field-data collection could further enrich the information base.</p>
+      <p>Finally, training on machines with greater computational power would enable larger, more robust models capable of handling the scale and complexity of the problem, producing more accurate and comprehensive forecasts. The expectation is not only to increase forecasting accuracy but also to advance the practical application of deep-learning models in monitoring and combating deforestation, contributing to the sustainable management of natural resources.</p>
+    </section>
+
+    <section class="references">
+      <h2 id="references">References</h2>
+      <ol>
+        <li id="ref-1">Imazon. <a href="https://imazon.org.br">Instituto do Homem e Meio Ambiente da Amazônia</a>. Accessed 5 December 2024.</li>
+        <li id="ref-2">Imazon. <a href="https://imazon.org.br/imprensa/desmatamento-e-degradacao-aumentam-pelo-quinto-mes-consecutivo-na-amazonia/">Deforestation and degradation rise for the fifth consecutive month in the Amazon</a>. Accessed 16 December 2024.</li>
+        <li id="ref-3">Gao, Z., Tan, C., Wu, L., and Li, S. Z. <em>SimVP: Simpler Yet Better Video Prediction</em>. Computer Vision Foundation, 2022.</li>
+        <li id="ref-4">Tan, C., Gao, Z., Li, S., and Li, S. Z. <a href="https://arxiv.org/abs/2206.05099"><em>SimVP: Towards Simple yet Powerful Spatiotemporal Predictive Learning</em></a>, 2022.</li>
+        <li id="ref-5">Valeriano, D. M., et al. <em>Metodologia do sistema DETER-B</em>. Instituto Nacional de Pesquisas Espaciais (INPE), 2016.</li>
+        <li id="ref-6">TerraBrasilis. <a href="https://terrabrasilis.dpi.inpe.br/en/download-files/">Legal Amazon notices—Shapefile (since 2016)</a>.</li>
+        <li id="ref-7">TerraBrasilis. <a href="https://terrabrasilis.dpi.inpe.br">TerraBrasilis</a>.</li>
+        <li id="ref-8">Diakogiannis, F. I., Waldner, F., Caccetta, P., and Wu, C. <em>ResUNet-a: A Deep Learning Framework for Semantic Segmentation of Remotely Sensed Data</em>. arXiv:2105.05537v1, 2021.</li>
+        <li id="ref-9">Chen, L.-C., et al. <em>Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation</em>. arXiv:1802.02611v3, 2018.</li>
+        <li id="ref-10">Cao, H., et al. <em>Swin-Unet: Unet-like Pure Transformer for Medical Image Segmentation</em>. arXiv:1904.00592v3, 2020.</li>
+        <li id="ref-11">NASA Earth Observatory. <a href="https://earthobservatory.nasa.gov/images/145988/tracking-amazon-deforestation-from-above">Tracking Amazon deforestation from above</a>.</li>
+        <li id="ref-12">WWF Brasil. <a href="https://www.wwf.org.br/natureza_brasileira/areas_prioritarias/amazonia1/bioma_amazonia/">Amazônia</a>.</li>
+      </ol>
+    </section>
+  </main>
+  <script>
+    const header = document.querySelector<HTMLElement>(".project-header");
+    const contents = document.querySelector<HTMLElement>(".contents");
+    if (header && contents) {
+      const links = [...contents.querySelectorAll<HTMLAnchorElement>("a")];
+      const sections = links
+        .map((link) => document.querySelector<HTMLElement>(link.hash))
+        .filter((section): section is HTMLElement => section !== null);
+      const updateContents = () => {
+        contents.hidden = header.getBoundingClientRect().bottom > 0;
+        let current = sections[0];
+        for (const section of sections) {
+          if (section.getBoundingClientRect().top <= innerHeight * 0.2) current = section;
+        }
+        links.forEach((link) => link.classList.toggle("active", link.hash === `#${current?.id}`));
+      };
+      addEventListener("scroll", updateContents, { passive: true });
+      updateContents();
+    }
+  </script>
+</Document>
+
+<style>
+  main {
+    --accent: #e87500;
+    counter-reset: figure;
+    width: min(70rem, 100% - 3rem);
+    margin: 0 auto;
+    padding: 2rem 0 5rem;
+    color: #22291e;
+  }
+
+  nav a {
+    color: inherit;
+    font: 700 0.875rem/1 Arial, Helvetica, sans-serif;
+    text-decoration: none;
+  }
+
+  .contents {
+    position: fixed;
+    top: 2rem;
+    left: max(1rem, calc(50% - 48rem));
+    display: grid;
+    gap: 0.5rem;
+    width: 12rem;
+    font: 0.875rem/1.25 Arial, Helvetica, sans-serif;
+  }
+
+  .contents[hidden] {
+    display: none;
+  }
+
+  .contents p {
+    margin: 0 0 0.25rem;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .contents a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .contents a.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .contents .subsection {
+    padding-left: 0.75rem;
+  }
+
+  .contents .detail {
+    padding-left: 1.5rem;
+  }
+
+  .project-header {
+    margin: 2rem 0 5rem;
+  }
+
+  .title-block p,
+  figcaption {
+    font: 700 0.75rem/1.3 Arial, Helvetica, sans-serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .title-block {
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+
+  .project-info {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 1rem;
+    row-gap: 0.125rem;
+    margin: 0 0 0.75rem;
+    font: 1.125rem/1.3 Georgia, "Times New Roman", serif;
+  }
+
+  .project-info em {
+    grid-column: 1 / -1;
+    font-style: italic;
+  }
+
+  .introduction .intro-image {
+    clear: both;
+    width: 100%;
+    margin: 2rem 0;
+    float: none;
+  }
+
+  header h1 {
+    max-width: 68rem;
+  }
+
+  .project-meta {
+    width: min(42rem, 100%);
+    margin: 0 auto 6rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p {
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(3rem, 4.5vw, 6rem);
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+  }
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    color: var(--accent);
+  }
+
+  h3 {
+    margin: 2.5rem 0 1rem;
+    color: var(--accent);
+    font-size: 1.25rem;
+  }
+
+  h4 {
+    margin: 2rem 0 1rem;
+    font-size: 1rem;
+  }
+
+  h2,
+  h3,
+  h4 {
+    scroll-margin-top: 2rem;
+  }
+
+  .lede {
+    max-width: 40rem;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    font-style: italic;
+  }
+
+  .downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+    font: 700 0.875rem/1 Arial, Helvetica, sans-serif;
+  }
+
+  .downloads a {
+    color: var(--accent);
+  }
+
+  .availability {
+    font: 0.875rem/1.4 Arial, Helvetica, sans-serif;
+  }
+
+  math {
+    font-family: "Times New Roman", serif;
+    font-size: 1.1em;
+  }
+
+  math[display="block"] {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+
+  section {
+    max-width: 42rem;
+    margin: 6rem auto;
+    font-size: 1.125rem;
+    line-height: 1.45;
+  }
+
+  section p,
+  section li {
+    text-align: justify;
+  }
+
+  .introduction {
+    max-width: 42rem;
+  }
+
+  .introduction figure {
+    float: right;
+    width: min(50%, 24rem);
+    margin: 0 0 1.5rem 2rem;
+  }
+
+  .introduction::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+
+  .intro-evidence {
+    clear: both;
+    display: grid;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .introduction .intro-evidence figure {
+    float: none;
+    width: 100%;
+    margin: 0;
+  }
+
+  li + li {
+    margin-top: 0.3rem;
+  }
+
+  figure {
+    counter-increment: figure;
+    width: min(42rem, 100%);
+    margin: 4rem auto;
+  }
+
+  .illustration {
+    width: 100vw;
+    max-width: none;
+    margin: 6rem 50% 6rem calc(50% - 50vw);
+  }
+
+  .pre-introduction-image {
+    width: 100%;
+    margin: 0 0 2rem;
+  }
+
+  .image-pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    width: min(42rem, 100%);
+    margin: 4rem auto;
+  }
+
+  .image-pair figure {
+    margin: 0;
+  }
+
+  .slide-stack figure {
+    margin: 4rem 0;
+  }
+
+  .slide-stack .text-figure {
+    width: min(42rem, 100%);
+    margin-inline: auto;
+  }
+
+  .slide-stack .illustration {
+    margin: 6rem 50% 6rem calc(50% - 50vw);
+  }
+
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    width: min(42rem, 100%);
+    margin: 4rem auto;
+  }
+
+  .evidence-grid figure {
+    margin: 0;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    max-height: 48rem;
+    object-fit: contain;
+  }
+
+  figcaption {
+    margin-top: 0.75rem;
+  }
+
+  .illustration figcaption {
+    width: min(42rem, calc(100% - 3rem));
+    margin-inline: auto;
+  }
+
+  figcaption::before {
+    content: "Fig. " counter(figure) " — ";
+  }
+
+  .references {
+    font-size: 0.875rem;
+  }
+
+  .references ol {
+    padding-left: 1.5rem;
+  }
+
+  .references li + li {
+    margin-top: 1rem;
+  }
+
+  .references a {
+    color: inherit;
+  }
+
+  a:hover,
+  a:focus-visible {
+    color: var(--accent);
+  }
+
+  @media (max-width: 60rem) {
+    .introduction {
+      max-width: 42rem;
+    }
+
+    .introduction figure {
+      float: none;
+      width: 100%;
+      margin: 0 0 2rem;
+    }
+
+    .intro-evidence {
+      grid-template-columns: 1fr;
+    }
+
+    .image-pair {
+      grid-template-columns: 1fr;
+    }
+
+  }
+
+  @media (max-width: 90rem) {
+    .contents {
+      display: none;
+    }
+  }
+</style>

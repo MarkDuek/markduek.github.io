@@ -1,6 +1,7 @@
 ---
 import Document from "../layouts/Document.astro";
 import ShaderCanvas from "../components/ShaderCanvas.astro";
+import deforestationThumbnail from "../assets/projects/deforestation-forecasting/prediction-heatmap.jpg";
 ---
 
 <Document
@@ -48,8 +49,13 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
       </a>
     </nav>
     <section class="projects" id="projects" aria-labelledby="projects-title">
-      <h2 id="projects-title">Projects</h2>
-      <p>Project work will be listed here.</p>
+      <header class="projects-header"><h2 id="projects-title">Projects</h2></header>
+      <ol class="project-list">
+        <li><a class="project-card" href="/projects/anomaly-detection-benchmark/"><h3>Anomaly Detection Benchmark</h3><p class="project-meta">Independent work · In progress</p><p class="project-description">Benchmarking anomaly-detection methods.</p></a></li>
+        <li><a class="project-card" href="/projects/information-theoretical-pca/"><h3>Information-Theoretical PCA for Anomaly Detection on Subspaces</h3><p class="project-meta">ELE2618 · Information Theory · Sep.–Nov. 2025</p><p class="project-description">Evaluated subspace methods for network-traffic anomaly detection.</p></a></li>
+        <li><a class="project-card" href="/projects/lightweight-neural-networks/"><h3>Lightweight Neural Networks for Deforestation Prediction in the Brazilian Amazon</h3><p class="project-meta">ENG2346 · Deep Learning · May–Jul. 2025</p><p class="project-description">Built a 3D U-Net for satellite-based deforestation segmentation.</p></a></li>
+        <li><a class="project-card" href="/projects/deforestation-forecasting/"><h3>Deep Learning Model for Deforestation Prediction in the Brazilian Amazon Using Multitemporal Data</h3><p class="project-meta">Stone Labs, PUC-Rio · Deep Learning · Aug.–Dec. 2024</p><p class="project-description">Forecasted deforestation from satellite time-series data.</p><img src={deforestationThumbnail.src} alt="Observed alerts and a predicted deforestation heatmap." /></a></li>
+      </ol>
     </section>
   </main>
 </Document>
@@ -213,8 +219,11 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
     font-family: "Arial Black", Arial, Helvetica, sans-serif;
   }
 
-  .projects h2,
-  .projects p {
+  .projects-header {
+    border-bottom: 1px solid #22291e;
+  }
+
+  .projects h2 {
     width: max-content;
     max-width: 100%;
     margin: 0;
@@ -227,10 +236,53 @@ import ShaderCanvas from "../components/ShaderCanvas.astro";
     letter-spacing: -0.04em;
   }
 
-  .projects p {
-    margin-top: 0.75rem;
-    font: 400 0.875rem/1.1 Arial, Helvetica, sans-serif;
+  .project-list {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project-card {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background: #eae8dc;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .project-list h3 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+
+  .project-meta {
+    margin: 0.5rem 0 0;
+    font: 400 0.75rem/1.1 Georgia, "Times New Roman", serif;
     text-transform: uppercase;
+  }
+
+  .project-description {
+    margin: 0.5rem 0 0;
+    font: 400 0.875rem/1.2 Georgia, "Times New Roman", serif;
+  }
+
+  .project-card img {
+    display: block;
+    width: min(100%, 22rem);
+    margin-top: 0.75rem;
+  }
+
+  .project-card:hover,
+  .project-card:focus-visible {
+    color: #b22222;
+    transform: translateX(0.25rem);
   }
 
   .social-links {
