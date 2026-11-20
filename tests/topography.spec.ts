@@ -61,8 +61,9 @@ test("desktop: shader renders, animates, responds and relaxes without errors", a
   const canvas = page.locator("canvas");
   const before = await canvas.screenshot();
   await expect.poll(() => page.evaluate(() => window.terrainTest.time)).toBeGreaterThan(0.6);
-  const after = await canvas.screenshot({ path: info.outputPath("desktop.png") });
+  const after = await canvas.screenshot();
   expect(before.equals(after)).toBe(false);
+  await page.screenshot({ path: info.outputPath("desktop.png") });
 
   await page.mouse.move(180, 700);
   await page.mouse.move(620, 500, { steps: 12 });
@@ -71,7 +72,52 @@ test("desktop: shader renders, animates, responds and relaxes without errors", a
   const error = await canvas.evaluate(element => (element as HTMLCanvasElement).getContext("webgl")!.getError());
   expect(error).toBe(0);
   expect(errors).toEqual([]);
-  await expect(page.locator("body")).not.toContainText("Mark Duek");
+  await expect(page.getByRole("heading", { name: "Mark Duek", exact: true })).toBeVisible();
+});
+
+test("landing title and navigation fit desktop and mobile, with working keyboard links", async ({ page }) => {
+  const destinations = [
+    ["About", "/about/", "About"],
+    ["Projects", "/projects/", "Projects"],
+    ["Curriculum Vitae", "/cv/", "Curriculum"],
+  ];
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+    { width: 844, height: 390 },
+    { width: 568, height: 320 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    const heading = page.getByRole("heading", { name: "Mark Duek", exact: true });
+    await expect(heading).toBeVisible();
+    const bounds = await heading.boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    for (const [label, path] of destinations) {
+      const link = page.getByRole("link", { name: label, exact: true });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", path);
+      await expect(link).toHaveCSS("color", "rgb(34, 41, 30)");
+      await link.scrollIntoViewIfNeeded();
+      const box = await link.boundingBox();
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  for (const [label, path, heading] of destinations) {
+    await page.goto("/");
+    for (let i = 0; i <= destinations.findIndex(item => item[0] === label); i++) {
+      await page.keyboard.press("Tab");
+    }
+    await expect(page.getByRole("link", { name: label, exact: true })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(path);
+    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+  }
 });
 
 test("hover pulls the surface at rest and releases with elastic relaxation", async ({ page }, info) => {

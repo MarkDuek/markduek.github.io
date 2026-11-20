@@ -96,10 +96,11 @@ function start() {
   let active = false;
 
   function draw() {
+    const scrollOffset = motion.matches ? 0 : window.scrollY / Math.min(rect.width, rect.height);
     gl.uniform1f(time, motion.matches ? 0 : elapsed);
-    gl.uniform4f(pointer, px, py, motion.matches ? 0 : vx, motion.matches ? 0 : vy);
+    gl.uniform4f(pointer, px, py + scrollOffset * 0.15, motion.matches ? 0 : vx, motion.matches ? 0 : vy);
     gl.uniform1f(pressure, motion.matches ? 0 : strength);
-    gl.uniform1f(scroll, motion.matches ? 0 : window.scrollY / Math.min(rect.width, rect.height));
+    gl.uniform1f(scroll, scrollOffset);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     surface.dataset.state = "ready";
   }
