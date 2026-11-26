@@ -1,0 +1,218 @@
+---
+import Document from "../../layouts/Document.astro";
+import mapImage from "../../assets/projects/lightweight-neural-networks/deter-amazonia-legal.png";
+import baselineImage from "../../assets/projects/lightweight-neural-networks/baseline-predictions.png";
+import tinyUnetImage from "../../assets/projects/lightweight-neural-networks/tiny3dunet-predictions.jpg";
+---
+
+<Document
+  title="Lightweight Neural Networks for Deforestation Prediction in the Brazilian Amazon — Mark Duek"
+  description="A comparison of lightweight neural networks for satellite-based deforestation prediction."
+>
+  <main>
+    <nav><a href="/#projects">← Projects</a></nav>
+    <header class="project-header">
+      <div class="title-block">
+        <div class="project-info">
+          <span>PUC-Rio</span>
+          <time>Jul. 2025</time>
+          <em>Deep Learning, Remote Sensing, Semantic Segmentation</em>
+        </div>
+        <h1>Lightweight Neural Networks for Deforestation Prediction in the Brazilian Amazon</h1>
+      </div>
+    </header>
+
+    <div class="project-meta">
+      <p class="lede">A continuation of the previous <a href="/projects/deforestation-forecasting/">deforestation-forecasting project</a>, evolving its multitemporal DETER data into lightweight models for localized binary-mask prediction.</p>
+      <p class="downloads"><a href="/documents/lightweight-neural-networks-slides.pdf" download>Download slides (PDF)</a><a href="/documents/lightweight-neural-networks-manuscript.pdf" download>Download manuscript (PDF)</a></p>
+    </div>
+
+    <aside class="contents" aria-label="On this page" hidden>
+      <p>Contents</p>
+      <a href="#introduction">1. Introduction</a>
+      <a href="#previous-work">2. Previous Work</a>
+      <a href="#method">3. Proposed Method</a>
+      <a class="subsection" href="#dataset">3.1 Amazon Dataset</a>
+      <a class="subsection" href="#segmentation">3.2 Semantic Segmentation</a>
+      <a class="subsection" href="#architecture">3.3 Model Architecture</a>
+      <a href="#results">4. Results</a>
+      <a href="#conclusion">5. Conclusion</a>
+      <a href="#future-work">6. Future Work</a>
+    </aside>
+
+    <section>
+      <h2 id="introduction">1. Introduction</h2>
+      <p>Deforestation in the Amazon has become a pressing global concern due to its severe impacts on climate, biodiversity, and local communities. In 2024, the region experienced a dramatic surge in forest degradation, with over 32,000 km² affected by October — the worst in 15 years — largely driven by fires and illegal logging <a href="#ref-1">[1]</a>.</p>
+      <p>This growing crisis highlights the importance of predictive tools that can anticipate deforestation before it happens. Forecasting where and when degradation is likely to occur enables more efficient monitoring, targeted enforcement, and proactive policy-making.</p>
+      <p>This project explores the use of deep learning models, particularly lightweight neural networks, to predict deforestation using multitemporal satellite data. By focusing on smaller spatial samples, the study investigates whether this approach can yield more accurate and localized predictions, supporting scalable and effective environmental monitoring.</p>
+    </section>
+
+    <section>
+      <h2 id="previous-work">2. Previous Works</h2>
+      <p>This project continues and evolves the earlier <a href="/projects/deforestation-forecasting/">deforestation-forecasting project</a>, which evaluated the applicability of a spatiotemporal video-prediction model — SimVPv2 — for forecasting deforestation in the Brazilian Amazon <a href="#ref-3">[3]</a>. This approach treated the problem as a sequence-to-sequence prediction task, where a deep learning model forecasts future spatial patterns based on a series of past deforestation frames.</p>
+      <p>The SimVPv2 model, adapted from video-prediction literature <a href="#ref-8">[8]</a>, was chosen for its efficient and modular design, incorporating a spatial encoder-decoder and a temporal translator module that processes multichannel satellite data in a video-like format.</p>
+      <p>To benchmark the model's performance, I compared it against several established semantic segmentation architectures, including DeepLabV3+, Swin-UNet, and ResUNet. Each of these models brought distinct advantages in capturing spatial features and segmenting complex patterns from satellite imagery.</p>
+      <p>The results showed that SimVPv2 achieved promising performance in capturing temporal dynamics and spatial patterns, but still lagged behind the other models.</p>
+      <h3>ResUNet</h3>
+      <p>One of which was ResUNet <a href="#ref-6">[6]</a>, a deep learning architecture that merges the strengths of two influential models: U-Net <a href="#ref-11">[11]</a>, a widely adopted framework for semantic segmentation, and ResNet <a href="#ref-12">[12]</a>, known for its residual connections that facilitate the training of deeper networks.</p>
+      <p>The U-Net structure excels at pixel-level classification by combining high-resolution feature maps from the encoder with upsampled outputs in the decoder, preserving spatial context and enabling precise localization. The inclusion of residual blocks improves gradient flow, making it easier to train deeper models and enhancing overall performance, particularly in complex segmentation tasks.</p>
+      <h3>DETER Data</h3>
+      <p>The DETER (Detection of Deforestation in Real Time) system, developed by the Brazilian National Institute for Space Research (INPE), is one of the most widely used tools for near-real-time monitoring of deforestation in the Amazon. It provides alerts based on satellite imagery, enabling rapid response from environmental agencies and policy makers.</p>
+      <p>DETER data is derived from the MODIS sensor onboard the TERRA satellite, which offers high temporal resolution — with daily updates — but limited spatial resolution (250 meters per pixel). This trade-off allows for timely alerts while limiting fine-grained spatial analysis.</p>
+      <p>For this study, the data was sourced from TerraBrasilis <a href="#ref-9">[9]</a>, INPE’s online platform for environmental monitoring. It offers geospatial data in shapefile (.shp) format, where each record represents a deforestation alert polygon. These polygons are associated with metadata such as alert date, area, and land use classification.</p>
+    </section>
+
+    <figure>
+      <img src={mapImage.src} alt="Legal Amazon map showing DETER deforestation alerts." />
+      <figcaption>Legal Amazon Deforestation Alerts.</figcaption>
+    </figure>
+
+    <section>
+      <h2 id="method">3. Proposed Method</h2>
+      <h3 id="dataset">3.1 Amazon Dataset</h3>
+      <p>To support deforestation forecasting, we construct a multichannel spatiotemporal dataset derived from the DETER system, which provides biweekly alerts of forest degradation in the Brazilian Amazon. These alerts are processed and rasterized into a uniform grid with 1 km² spatial resolution and transformed into a sequence of temporal frames. Each frame represents a distinct time period and captures meaningful features through five structured channels:</p>
+      <ol>
+        <li><strong>Area of Deforestation:</strong> The area of deforestation that was recorded in a given grid cell.</li>
+        <li><strong>Normalized Polygon Count:</strong> The count of individual deforestation polygons overlapping each grid cell, normalized across space and time to mitigate regional bias and stabilize learning dynamics.</li>
+        <li><strong>Cumulative Alerted Area:</strong> A summation of alerted areas per cell over time, representing the cumulative impact of degradation and enabling the model to capture long-term degradation trends.</li>
+        <li><strong>Temporal Difference of Alerted Area:</strong> A channel encoding the first-order temporal derivative of alerted area values, effectively modeling the velocity of deforestation over time and highlighting regions of accelerating change.</li>
+        <li><strong>Seasonality Factor (Moving Average):</strong> A smoothed temporal signal derived from historical patterns using a moving average.</li>
+      </ol>
+      <p>These channels collectively form a five-dimensional tensor of shape <math><mo>(</mo><mi>C</mi><mo>,</mo><mi>T</mi><mo>,</mo><mi>H</mi><mo>,</mo><mi>W</mi><mo>)</mo></math>, where <math><mi>C</mi><mo>=</mo><mn>5</mn></math> is the number of channels, <math><mi>T</mi></math> the number of time steps, and <math><mi>H</mi><mo>×</mo><mi>W</mi></math> the spatial dimensions of each patch. This design captures both high-frequency and long-term dynamics in a compact, learnable format.</p>
+
+      <h3 id="segmentation">3.2 Semantic Segmentation</h3>
+      <p>To facilitate model training and improve predictive performance, the target deforestation data, in this case the target's Area of Deforestation, is transformed into a binary segmentation mask. Each target frame is rasterized such that grid cells with any indication of deforestation are assigned a value of <math><mn>1</mn></math>, while all others are assigned <math><mn>0</mn></math>. This transformation recasts the forecasting task as a <em>semantic segmentation problem</em>, where the objective is to predict a spatial map of deforestation probabilities at the pixel level.</p>
+      <p>This formulation offers several advantages. First, it aligns naturally with the spatial structure of satellite data and allows the use of convolutional architectures designed for segmentation tasks. Second, it enables the application of well-established segmentation loss functions — such as Binary Cross Entropy and Soft IoU — which are particularly suited to handling class imbalance and learning sparse spatial features.</p>
+      <p>By framing the task as semantic segmentation, the model is incentivized to produce coherent spatial predictions, capturing the structure and extent of emerging deforestation zones with high spatial fidelity.</p>
+
+      <h3>3.3 Patch Extraction</h3>
+      <p>Given the vast spatial extent of the Amazon and the sparsity of deforestation events, training directly on full-resolution maps would lead to severe class imbalance and excessive computational cost. To mitigate this, we partition the dataset into non-overlapping patches of size <math><mn>32</mn><mo>×</mo><mn>32</mn></math> pixels. Only patches in which the target frame contains at least one deforested pixel are retained for training. This selection strategy focuses model capacity on informative regions and accelerates convergence by reducing exposure to trivial negative samples (i.e., completely forested areas).</p>
+      <p>Each input sample thus consists of a <math><mo>(</mo><mn>5</mn><mo>,</mo><mn>6</mn><mo>,</mo><mn>32</mn><mo>,</mo><mn>32</mn><mo>)</mo></math> tensor representing six historical time steps across five channels. The corresponding target is a single binary frame of shape <math><mo>(</mo><mn>1</mn><mo>,</mo><mn>32</mn><mo>,</mo><mn>32</mn><mo>)</mo></math> indicating predicted deforestation occurrence.</p>
+
+      <h3 id="architecture">3.4 Model Architecture</h3>
+      <p>To investigate the complexity of the forecasting task and establish a robust baseline, we implement two distinct architectures:</p>
+      <h4>Baseline 3D Convolutional Model</h4>
+      <p>The baseline model consists of a single 3D convolutional layer that simultaneously aggregates spatial and temporal information. Given an input tensor of shape <math><mo>(</mo><mi>C</mi><mo>,</mo><mi>T</mi><mo>,</mo><mi>H</mi><mo>,</mo><mi>W</mi><mo>)</mo></math>, the 3D kernel integrates features across all five channels and six time steps, projecting the result into a single-channel output. Formally, this can be expressed as:</p>
+      <math display="block"><mover><mi>Y</mi><mo>^</mo></mover><mo>=</mo><mtext>Conv3D</mtext><mo>(</mo><mi>X</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>1</mn><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math>
+      <p>where <math><mi>X</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>C</mi><mo>×</mo><mi>T</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math> is the input tensor. While architecturally minimal, this model serves as a valuable probe to test the hypothesis that temporal and contextual patterns of deforestation may be learnable with low-capacity networks when trained on highly localized data.</p>
+      <h4>Tiny3DUNet Architecture</h4>
+      <p>The Tiny3DUNet is a lightweight spatiotemporal segmentation network inspired by the U-Net architecture and adapted for 3D inputs. It is designed to process satellite-based deforestation data represented as 5D tensors of shape <math><mo>(</mo><mi>B</mi><mo>,</mo><mi>C</mi><mo>,</mo><mi>T</mi><mo>,</mo><mi>H</mi><mo>,</mo><mi>W</mi><mo>)</mo></math>, where <math><mi>T</mi></math> denotes the temporal dimension. The model aims to balance spatial precision, temporal awareness, and computational efficiency.</p>
+      <p><strong>Encoder and Bottleneck:</strong> The encoder consists of two 3D residual blocks, each followed by spatial-only max-pooling layers with kernel size <math><mo>(</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo>)</mo></math> to preserve temporal resolution. A bottleneck residual block processes the most abstract features at the lowest spatial resolution.</p>
+      <p><strong>Decoder and Skip Connections:</strong> The decoder mirrors the encoder using transposed convolutions to upsample spatial dimensions. Each upsampling stage is followed by a residual block, which receives concatenated features from the corresponding encoder layer via skip connections. These skip connections help preserve high-resolution spatial information.</p>
+      <p><strong>Temporal Aggregation:</strong> Instead of producing a full temporal sequence, the model collapses the temporal dimension at the output using a 3D convolution with kernel size <math><mo>(</mo><mi>T</mi><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></math>, yielding a single predicted deforestation mask of shape <math><mo>(</mo><mi>B</mi><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mi>H</mi><mo>,</mo><mi>W</mi><mo>)</mo></math>.</p>
+      <p><strong>Residual Blocks:</strong> Each residual block contains two 3D convolutions with Batch Normalization and ReLU activation, along with a skip connection. Dropout is applied for regularization.</p>
+      <p>Let the input tensor be denoted by <math><mi>X</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>C</mi><mo>×</mo><mi>T</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></math>, where <math><mi>C</mi></math> is the number of input channels, <math><mi>T</mi></math> the number of time steps, and <math><mi>H</mi><mo>×</mo><mi>W</mi></math> the spatial resolution.</p>
+      <p>The Tiny3DUNet model is defined as a composition of four main components: <math><mi>ℰ</mi></math>, a spatiotemporal encoder with residual blocks and spatial pooling; <math><mi>ℬ</mi></math>, a bottleneck residual block; <math><mi>𝒟</mi></math>, a decoder with upsampling and skip connections; and <math><mi>𝒯</mi></math>, temporal aggregation via 3D convolution. The full forward pass is:</p>
+      <math display="block"><mtable><mtr><mtd><msub><mi>f</mi><mtext>enc</mtext></msub><mo>=</mo><mi>ℰ</mi><mo>(</mo><mi>X</mi><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><msup><mi>C</mi><mo>′</mo></msup><mo>×</mo><mi>T</mi><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></mtd></mtr><mtr><mtd><msub><mi>f</mi><mtext>bottleneck</mtext></msub><mo>=</mo><mi>ℬ</mi><mo>(</mo><msub><mi>f</mi><mtext>enc</mtext></msub><mo>)</mo></mtd></mtr><mtr><mtd><msub><mi>f</mi><mtext>dec</mtext></msub><mo>=</mo><mi>𝒟</mi><mo>(</mo><msub><mi>f</mi><mtext>bottleneck</mtext></msub><mo>,</mo><msub><mi>f</mi><mtext>enc</mtext></msub><mo>)</mo></mtd></mtr><mtr><mtd><mover><mi>Y</mi><mo>^</mo></mover><mo>=</mo><mi>𝒯</mi><mo>(</mo><msub><mi>f</mi><mtext>dec</mtext></msub><mo>)</mo><mo>=</mo><msub><mtext>Conv3D</mtext><mrow><mo>(</mo><mi>T</mi><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>)</mo></mrow></msub><mo>(</mo><msub><mi>f</mi><mtext>dec</mtext></msub><mo>)</mo><mo>∈</mo><msup><mi>ℝ</mi><mrow><mn>1</mn><mo>×</mo><mi>H</mi><mo>×</mo><mi>W</mi></mrow></msup></mtd></mtr></mtable></math>
+
+      <h3>3.5 Loss Function</h3>
+      <p>Given the highly imbalanced nature of the deforestation dataset — where most regions remain unchanged and deforested pixels are sparse — a standard loss function would lead to a model biased toward the background class. To counter this, we adopt a composite loss function that combines <strong>Weighted Binary Cross Entropy with Logits (Weighted BCE)</strong> and <strong>Soft Intersection over Union (SoftIoU)</strong>.</p>
+      <h4>Weighted Binary Cross Entropy with Logits</h4>
+      <p>To place greater emphasis on learning from deforested regions, we apply pixel-wise weights to the standard BCE loss. These weights are derived directly from the ground truth mask, assigning higher importance to positive (deforested) pixels. Formally, the weighted BCE is defined as:</p>
+      <math display="block"><msub><mi>ℒ</mi><mtext>wBCE</mtext></msub><mo>=</mo><mo>−</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msub><mi>w</mi><mi>i</mi></msub><mo>[</mo><msub><mi>y</mi><mi>i</mi></msub><mi>log</mi><mo>(</mo><mi>σ</mi><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>)</mo><mo>)</mo><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo>)</mo><mi>log</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>σ</mi><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>)</mo><mo>)</mo><mo>]</mo></math>
+      <p>where <math><msub><mi>x</mi><mi>i</mi></msub></math> is the raw logit for pixel <math><mi>i</mi></math>; <math><msub><mi>y</mi><mi>i</mi></msub><mo>∈</mo><mo>{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>}</mo></math> is the ground-truth label; <math><mi>σ</mi></math> is the sigmoid activation function; <math><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mi>α</mi><msub><mi>y</mi><mi>i</mi></msub></math> is the per-pixel weight, with <math><mi>α</mi><mo>&gt;</mo><mn>0</mn></math> increasing the penalty on deforested pixels; and <math><mi>N</mi></math> is the number of pixels. In our experiments, pixels marked as deforested receive higher weights, encouraging the model to prioritize learning from these rare but critical instances.</p>
+      <h4>Soft Intersection over Union</h4>
+      <p>To improve spatial consistency and directly optimize for mask overlap, we incorporate the differentiable SoftIoU loss:</p>
+      <math display="block"><msub><mi>ℒ</mi><mtext>IoU</mtext></msub><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><msub><mi>y</mi><mi>i</mi></msub></mrow><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo>+</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><msub><mi>y</mi><mi>i</mi></msub><mo>+</mo><mi>ϵ</mi></mrow></mfrac></math>
+      <p>where <math><msub><mover><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo>=</mo><mi>σ</mi><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>)</mo></math> is the predicted probability, and <math><mi>ϵ</mi></math> is a small constant added for numerical stability.</p>
+      <h4>Combined Loss Function</h4>
+      <p>To balance the local pixel-wise learning from the weighted BCE and the global spatial consistency from SoftIoU, we define a composite loss as follows:</p>
+      <math display="block"><msub><mi>ℒ</mi><mtext>total</mtext></msub><mo>=</mo><mi>β</mi><mo>·</mo><msub><mi>ℒ</mi><mtext>IoU</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>β</mi><mo>)</mo><mo>·</mo><msub><mi>ℒ</mi><mtext>wBCE</mtext></msub></math>
+      <p>Here, <math><mi>β</mi><mo>∈</mo><mo>[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>]</mo></math> is a tunable parameter controlling the trade-off between the two objectives. A higher value of <math><mi>β</mi></math> emphasizes pixel-wise classification, while a lower value promotes better spatial overlap and segmentation coherence.</p>
+    </section>
+
+    <section>
+      <h2 id="results">4. Results</h2>
+      <div class="table-wrap"><table><caption>Performance Comparison Between Baseline and Tiny3DUNet Models</caption><thead><tr><th>Model</th><th>IoU</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1 Score</th></tr></thead><tbody><tr><td>Baseline</td><td>0.065</td><td>0.975</td><td>0.080</td><td>0.230</td><td>0.119</td></tr><tr><td>Tiny3DUNet</td><td>0.046</td><td>0.943</td><td>0.050</td><td>0.384</td><td>0.088</td></tr></tbody></table></div>
+      <p>The table presents the performance metrics for both the baseline and Tiny3DUNet models. The baseline achieved a higher IoU (0.065) and overall accuracy (0.975), reflecting its conservative behavior and lower false positive rate. However, its F1 score (0.119) and recall (0.230) indicate that it often fails to identify many true deforestation instances.</p>
+      <p>In contrast, the Tiny3DUNet model exhibited a more aggressive detection profile, with significantly higher recall (0.384), suggesting improved sensitivity to deforestation patterns. However, this came at the cost of reduced precision (0.050) and lower IoU (0.046), pointing to a greater number of false positives. These results reveal a fundamental trade-off between sensitivity and specificity and reinforce the need for further calibration, especially in terms of loss weighting and decision thresholding.</p>
+      <p>We can further analyze the results by looking at the predictions of the models. The following figures show the predictions of the baseline model and Tiny3DUNet model.</p>
+    </section>
+    <figure><img src={baselineImage.src} alt="Predictions from the baseline 3D convolutional model." /><figcaption>Baseline 3D Convolutional Model Predictions.</figcaption></figure>
+    <figure><img src={tinyUnetImage.src} alt="Predictions from the Tiny3DUNet model." /><figcaption>Tiny3DUNet Model Predictions.</figcaption></figure>
+
+    <section>
+      <h2 id="conclusion">5. Conclusion</h2>
+      <p>This work highlights the potential of simplified, lightweight architectures for deforestation prediction using multitemporal satellite data. Rather than increasing model complexity, our results suggest that framing the task at a finer spatial scale and simplifying its structure could offer more interpretable and localized predictions.</p>
+      <p>By focusing on smaller spatial patches and limiting the modeling capacity to essential spatiotemporal features, we open a valuable path toward more scalable and explainable systems. These findings motivate a broader discussion around shifting research priorities—from aggressively expanding model depth and parameter count to refining problem formulation and targeting more granular, actionable outcomes.</p>
+    </section>
+
+    <section>
+      <h2 id="future-work">6. Future Work</h2>
+      <p>Several directions remain to be explored in order to refine and expand the capabilities of the proposed framework. One immediate avenue involves a more thorough investigation of the loss function balancing strategy. Specifically, varying the weighting parameter <math><mi>β</mi></math>, which controls the contribution of the Weighted Binary Cross Entropy and SoftIoU terms, could yield better performance depending on the spatial and temporal characteristics of the data. Similarly, experimenting with different thresholding schemes for binarizing the model outputs may enhance the interpretability and reliability of the predicted masks.</p>
+      <p>Furthermore, incorporating overlapping patches during the extraction process may help reduce boundary artifacts and enhance the spatial continuity of predictions across adjacent tiles. This approach can also increase the number of training samples, potentially improving the model’s generalization capacity.</p>
+      <p>Another important direction is the investigation of spatial patch size. Future studies should examine how varying the patch resolution influences the model’s ability to capture fine-grained deforestation patterns while preserving its robustness across heterogeneous regions.</p>
+      <p>Together, these extensions aim to strengthen the model’s accuracy, spatial coherence, and operational usability in real-world environmental monitoring systems.</p>
+    </section>
+
+    <section class="references">
+      <h2>References</h2>
+      <ol>
+        <li id="ref-1">Instituto do Homem e Meio Ambiente da Amazônia (IMAZON), <a href="https://imazon.org.br">“Homepage,”</a> 2024.</li>
+        <li id="ref-2">Instituto do Homem e Meio Ambiente da Amazônia (IMAZON), “Desmatamento e degradação aumentam pelo quinto mês consecutivo na Amazônia,” 2024.</li>
+        <li id="ref-3">M. Duek, “Final Undergraduate Project: Recurrent Architecture for Deforestation Prediction in the Brazilian Amazon,” Pontifical Catholic University of Rio de Janeiro (PUC-Rio), 2025.</li>
+        <li id="ref-4">H. Cao et al., <em>Swin-Unet: Unet-like pure transformer for medical image segmentation</em>, arXiv:1904.00592, 2020.</li>
+        <li id="ref-5">L.-C. Chen et al., <em>Encoder-decoder with atrous separable convolution for semantic image segmentation</em>, arXiv:1802.02611, 2018.</li>
+        <li id="ref-6">F. I. Diakogiannis et al., <em>ResUNet-a: A deep learning framework for semantic segmentation of remotely sensed data</em>, arXiv:2105.05537, 2021.</li>
+        <li id="ref-7">Z. Gao et al., <em>SimVP: Simpler yet better video prediction</em>, Computer Vision Foundation, 2022.</li>
+        <li id="ref-8">C. Tan et al., <em>SimVP: Towards simple yet powerful spatiotemporal predictive learning</em>, 2022.</li>
+        <li id="ref-9">TerraBrasilis Platform, <a href="https://terrabrasilis.dpi.inpe.br/en/download-files/">“Terrabrasilis Legal Amazon DETER Notices – Shapefiles (since 2016),”</a> INPE.</li>
+        <li id="ref-10">D. M. Valeriano et al., <em>Metodologia do Sistema DETER-B</em>, Instituto Nacional de Pesquisas Espaciais (INPE), 2016.</li>
+        <li id="ref-11">O. Ronneberger, P. Fischer, and T. Brox, <em>U-Net: Convolutional networks for biomedical image segmentation</em>, MICCAI.</li>
+        <li id="ref-12">Z. Zhang, Q. Liu, and Y. Wang, <em>Road extraction by Deep Residual U-Net</em>, IEEE Geoscience and Remote Sensing Letters, 2018.</li>
+      </ol>
+    </section>
+  </main>
+  <script>
+    const header = document.querySelector<HTMLElement>(".project-header");
+    const contents = document.querySelector<HTMLElement>(".contents");
+    if (header && contents) {
+      const links = [...contents.querySelectorAll<HTMLAnchorElement>("a")];
+      const sections = links.map((link) => document.querySelector<HTMLElement>(link.hash)).filter((section): section is HTMLElement => section !== null);
+      const updateContents = () => {
+        contents.hidden = header.getBoundingClientRect().bottom > 0;
+        let current = sections[0];
+        for (const section of sections) if (section.getBoundingClientRect().top <= innerHeight * 0.2) current = section;
+        links.forEach((link) => link.classList.toggle("active", link.hash === `#${current?.id}`));
+      };
+      addEventListener("scroll", updateContents, { passive: true });
+      updateContents();
+    }
+  </script>
+</Document>
+
+<style>
+  main { --accent: #e87500; counter-reset: figure; width: min(70rem, 100% - 3rem); margin: 0 auto; padding: 2rem 0 5rem; color: #22291e; }
+  nav a, .contents, .downloads { font-family: Arial, Helvetica, sans-serif; }
+  nav a { color: inherit; font-size: .875rem; font-weight: 700; text-decoration: none; }
+  .project-header { margin: 2rem 0 5rem; }
+  .title-block, .project-meta, section, figure { width: min(42rem, 100%); margin-inline: auto; }
+  .project-info { display: grid; grid-template-columns: 1fr auto; gap: .125rem 1rem; margin-bottom: .75rem; font: 1.125rem/1.3 Georgia, "Times New Roman", serif; }
+  .project-info em { grid-column: 1 / -1; }
+  h1, h2, h3, p { font-family: Georgia, "Times New Roman", serif; }
+  h1 { margin: 0; font-size: clamp(3rem, 4.5vw, 6rem); font-weight: 400; line-height: .9; letter-spacing: -.055em; }
+  h2 { margin: 0 0 1rem; color: var(--accent); font-size: 1.5rem; }
+  h3 { margin: 2.5rem 0 1rem; color: var(--accent); font-size: 1.25rem; }
+  h2, h3 { scroll-margin-top: 2rem; }
+  .project-meta { margin-bottom: 6rem; }
+  .lede { max-width: 40rem; font-size: 1.25rem; line-height: 1.3; font-style: italic; }
+  .downloads { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; font-size: .875rem; font-weight: 700; }
+  .downloads a, a:hover, a:focus-visible { color: var(--accent); }
+  section { margin-block: 6rem; font-size: 1.125rem; line-height: 1.45; }
+  section p { text-align: justify; }
+  figure { counter-increment: figure; margin-block: 4rem; }
+  img { display: block; width: 100%; max-height: 48rem; object-fit: contain; }
+  figcaption { margin-top: .75rem; font: 700 .75rem/1.3 Arial, Helvetica, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+  figcaption::before { content: "Fig. " counter(figure) " — "; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-family: Arial, Helvetica, sans-serif; font-size: .875rem; }
+  th, td { padding: .6rem; border-bottom: 1px solid #b9bdb5; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .contents { position: fixed; top: 2rem; left: max(1rem, calc(50% - 48rem)); display: grid; gap: .5rem; width: 12rem; font-size: .875rem; line-height: 1.25; }
+  .contents[hidden] { display: none; }
+  .contents p { margin: 0 0 .25rem; color: var(--accent); font-family: inherit; font-weight: 700; text-transform: uppercase; }
+  .contents a { color: inherit; text-decoration: none; }
+  .contents a.active { color: var(--accent); font-weight: 700; }
+  .contents .subsection { padding-left: .75rem; }
+  @media (max-width: 90rem) { .contents { display: none; } }
+</style>
