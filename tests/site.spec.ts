@@ -23,4 +23,13 @@ test("homepage, shader, and Amazon project pages are available", async ({ page }
     await page.goto(path);
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   }
+
+  await expect(page.getByRole("link", { name: "Code" }))
+    .toHaveAttribute("href", "https://github.com/MarkDuek/ele2346-amazon-deforestation-prediction");
+  await expect(page.getByRole("link", { name: "Download slides (PDF)" })).toHaveCount(0);
+
+  await page.goto("/projects/information-theoretical-pca/");
+  await expect(page.getByRole("heading", { name: "Information-Theoretical PCA for Anomaly Detection on Subspaces" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Code" }))
+    .toHaveAttribute("href", "https://github.com/MarkDuek/ele2618-information-theory");
 });

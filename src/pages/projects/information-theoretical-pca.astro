@@ -1,0 +1,155 @@
+---
+import Document from "../../layouts/Document.astro";
+import trafficImage from "../../assets/projects/information-theoretical-pca/traffic-matrix.png";
+import variancesImage from "../../assets/projects/information-theoretical-pca/captured-variances.png";
+import residualImage from "../../assets/projects/information-theoretical-pca/residual-energy.png";
+import entropyImage from "../../assets/projects/information-theoretical-pca/itpca-histograms.png";
+import rankSweepImage from "../../assets/projects/information-theoretical-pca/rank-sweep.png";
+---
+
+<Document
+  title="Information-Theoretical PCA for Anomaly Detection on Subspaces — Mark Duek"
+  description="An information-theoretical PCA extension for synthetic network-traffic anomaly detection."
+>
+  <main>
+    <nav><a href="/#projects">← Projects</a></nav>
+    <header class="project-header">
+      <div class="title-block">
+        <div class="project-info">
+          <span>PUC-Rio</span>
+          <time>Sep.–Nov. 2025</time>
+          <em>Information Theory, Anomaly Detection, Principal Component Analysis</em>
+        </div>
+        <h1>Information-Theoretical PCA for Anomaly Detection on Subspaces</h1>
+      </div>
+    </header>
+
+    <div class="project-meta">
+      <p class="lede">A study of subspace methods for detecting anomalous IP-network traffic, with an exploratory PCA variant that ranks principal directions by projected entropy.</p>
+      <p class="downloads"><a href="https://github.com/MarkDuek/ele2618-information-theory">Code</a><a href="/documents/information-theoretical-pca-slides.pdf" download>Download slides (PDF)</a></p>
+    </div>
+
+    <aside class="contents" aria-label="On this page" hidden>
+      <p>Contents</p>
+      <a href="#problem">1. Problem</a>
+      <a href="#data">2. Synthetic Traffic</a>
+      <a href="#pca">3. PCA Subspaces</a>
+      <a href="#itpca">4. Information-Theoretical PCA</a>
+      <a href="#results">5. Results</a>
+      <a href="#references">References</a>
+    </aside>
+
+    <section>
+      <h2 id="problem">1. Problem</h2>
+      <p>Network traffic has a low-dimensional structure: ordinary flow patterns tend to lie in a small subspace, while faults, attacks, and other unusual events appear in the residual. This project evaluates four subspace detectors on synthetic link-traffic data: classical PCA, randomized basis anomaly detection (RBAD), switched subspace-projected basis anomaly detection (SSPBAD), and Information-Theoretical PCA (IT-PCA).</p>
+      <p>The project follows Kaloorazi and de Lamare’s randomized-subspace study <a href="#ref-1">[1]</a>. PCA, RBAD, and SSPBAD reproduce the compared methods; IT-PCA is an exploratory extension that selects PCA directions by the entropy of their projections rather than by eigenvalue alone.</p>
+    </section>
+
+    <section>
+      <h2 id="data">2. Synthetic Traffic</h2>
+      <p>The observed link-traffic matrix is modeled as <math display="block"><mi>Y</mi><mo>=</mo><mi>R</mi><mo>(</mo><mi>X</mi><mo>+</mo><mi>A</mi><mo>)</mo><mo>+</mo><mi>V</mi></math>, where <math><mi>X</mi></math> is clean low-rank flow traffic, <math><mi>A</mi></math> contains sparse flow-level anomalies, <math><mi>R</mi></math> routes flows to observed links, and <math><mi>V</mi></math> is additive Gaussian measurement noise. A time column is anomalous when it contains a nonzero entry in <math><mi>A</mi></math>.</p>
+      <p>The notebook generates 120 links, 240 flows, and 640 time steps. The clean traffic rank is 24, routing entries are Bernoulli(0.05), anomaly density is 0.001 with random ±1 magnitudes, and the main experiment uses noise variance <math><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><mn>0.1</mn></math>.</p>
+    </section>
+    <figure>
+      <img src={trafficImage.src} alt="Heatmap of the generated observed network traffic matrix, with link index by time index." />
+      <figcaption>Generated observed traffic matrix Y.</figcaption>
+    </figure>
+
+    <section>
+      <h2 id="pca">3. PCA Subspaces</h2>
+      <p>PCA centers the observed traffic, decomposes its covariance matrix, and retains a basis <math><mi>P</mi></math> of principal directions. The modeled traffic is its projection onto that normal subspace, <math><mover><mi>Y</mi><mo>^</mo></mover><mo>=</mo><mi>P</mi><msup><mi>P</mi><mi>T</mi></msup><mi>Y</mi></math>. The residual <math><mover><mi>Y</mi><mo>~</mo></mover><mo>=</mo><mo>(</mo><mi>I</mi><mo>−</mo><mi>P</mi><msup><mi>P</mi><mi>T</mi></msup><mo>)</mo><mi>Y</mi></math> contains traffic unexplained by the normal subspace.</p>
+      <p>Each time column receives a squared prediction error (SPE), or Q-statistic, <math><msub><mi>s</mi><mi>i</mi></msub><mo>=</mo><mo>∥</mo><msub><mover><mi>Y</mi><mo>~</mo></mover><mi>:</mi></msub><mi>,</mi><mi>i</mi><mo>∥</mo><msub><mn>2</mn></msub><sup><mn>2</mn></sup></math>. A threshold derived from the tail eigenvalue moments flags columns with unusually high residual energy.</p>
+      <p>RBAD and SSPBAD replace the PCA basis calculation with randomized projections and QR orthogonalization. Their captured-variance spectra show how closely their bases approximate the dominant PCA subspace.</p>
+    </section>
+    <figure>
+      <img src={variancesImage.src} alt="Log-scale comparison of variance captured by PCA, RBAD, and SSPBAD components." />
+      <figcaption>Captured variance by subspace basis.</figcaption>
+    </figure>
+
+    <section>
+      <h2 id="itpca">4. Information-Theoretical PCA</h2>
+      <p>Standard PCA orders directions by variance. IT-PCA instead projects the centered traffic onto every covariance eigenvector, estimates each projected distribution with a histogram, and ranks the directions by Shannon entropy: <math display="block"><mi>H</mi><mo>(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>)</mo><mo>≈</mo><mo>−</mo><munderover><mo>∑</mo><mi>k</mi><mo></mo></munderover><msub><mi>p</mi><mi>k</mi></msub><mi>log</mi><msub><mi>p</mi><mi>k</mi></msub></math>.</p>
+      <p>The highest-entropy directions form the retained basis, then the same residual-energy score and Q-statistic threshold are applied. The histogram panels below show representative high-, low-, and mid-index component projections, with both native and entropy-sorted summaries.</p>
+    </section>
+    <figure>
+      <img src={entropyImage.src} alt="IT-PCA projected-component histograms with estimated entropy summaries." />
+      <figcaption>Entropy estimates used to rank PCA directions.</figcaption>
+    </figure>
+
+    <section>
+      <h2 id="results">5. Results</h2>
+      <p>At retained rank <math><mi>r</mi><mo>=</mo><mn>10</mn></math> and <math><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><mn>0.1</mn></math>, IT-PCA recovered more anomalous time columns than classical PCA in this seeded synthetic run. RBAD and SSPBAD recovered the most, showing the value of randomized bases in this configuration. These figures describe one generated dataset, not a statistical performance claim.</p>
+      <div class="table-wrap"><table><caption>Anomaly Detection Performance at r = 10</caption><thead><tr><th>Method</th><th>Threshold</th><th>Detected</th><th>Detection rate</th></tr></thead><tbody><tr><td>PCA</td><td>16.6233</td><td>27</td><td>0.205</td></tr><tr class="itpca"><td>IT-PCA</td><td>18.4948</td><td>44</td><td>0.333</td></tr><tr><td>RBAD</td><td>16.9986</td><td>49</td><td>0.371</td></tr><tr><td>SSPBAD</td><td>17.1985</td><td>50</td><td>0.379</td></tr></tbody></table></div>
+    </section>
+    <figure>
+      <img src={residualImage.src} alt="Residual energy and thresholds for PCA, IT-PCA, RBAD, and SSPBAD, with flagged points marked." />
+      <figcaption>Residual-energy scores and anomaly thresholds.</figcaption>
+    </figure>
+    <section>
+      <p>The notebook then sweeps the retained rank from 2 to 119 under two noise levels. At lower noise, IT-PCA preserves a stronger detection rate over a wider range of retained bases than PCA; all methods decline as the normal subspace becomes too large. At higher noise, every method is less effective, although IT-PCA remains competitive with the randomized alternatives across much of the sweep.</p>
+    </section>
+    <figure>
+      <img src={rankSweepImage.src} alt="Detection-rate rank sweeps comparing PCA, IT-PCA, RBAD, and SSPBAD at two noise variances." />
+      <figcaption>Detection rate across retained rank and noise variance.</figcaption>
+    </figure>
+
+    <section class="references">
+      <h2 id="references">References</h2>
+      <ol>
+        <li id="ref-1">M. F. Kaloorazi and R. C. de Lamare, <a href="https://arxiv.org/abs/1704.05741"><em>Study of Anomaly Detection Based on Randomized Subspace Methods in IP Networks</em></a>, arXiv:1704.05741, 2017.</li>
+        <li id="ref-2">J. Watt and R. Borhani, <em>Machine Learning Refined: Foundations, Algorithms, and Applications</em>, 2nd ed.</li>
+      </ol>
+    </section>
+  </main>
+  <script>
+    const header = document.querySelector<HTMLElement>(".project-header");
+    const contents = document.querySelector<HTMLElement>(".contents");
+    if (header && contents) {
+      const links = [...contents.querySelectorAll<HTMLAnchorElement>("a")];
+      const sections = links.map((link) => document.querySelector<HTMLElement>(link.hash)).filter((section): section is HTMLElement => section !== null);
+      const updateContents = () => {
+        contents.hidden = header.getBoundingClientRect().bottom > 0;
+        let current = sections[0];
+        for (const section of sections) if (section.getBoundingClientRect().top <= innerHeight * 0.2) current = section;
+        links.forEach((link) => link.classList.toggle("active", link.hash === `#${current?.id}`));
+      };
+      addEventListener("scroll", updateContents, { passive: true });
+      updateContents();
+    }
+  </script>
+</Document>
+
+<style>
+  main { --accent: #4f46e5; counter-reset: figure; width: min(70rem, 100% - 3rem); margin: 0 auto; padding: 2rem 0 5rem; color: #22291e; }
+  nav a, .contents, .downloads, table { font-family: Arial, Helvetica, sans-serif; }
+  nav a { color: inherit; font-size: .875rem; font-weight: 700; text-decoration: none; }
+  .project-header { margin: 2rem 0 5rem; }
+  .title-block, .project-meta, section, figure { width: min(42rem, 100%); margin-inline: auto; }
+  .project-info { display: grid; grid-template-columns: 1fr auto; gap: .125rem 1rem; margin-bottom: .75rem; font: 1.125rem/1.3 Georgia, "Times New Roman", serif; }
+  .project-info em { grid-column: 1 / -1; }
+  h1, h2, h3, p { font-family: Georgia, "Times New Roman", serif; }
+  h1 { margin: 0; font-size: clamp(3rem, 4.5vw, 6rem); font-weight: 400; line-height: .9; letter-spacing: -.055em; }
+  h2 { margin: 0 0 1rem; color: var(--accent); font-size: 1.5rem; }
+  h2 { scroll-margin-top: 2rem; }
+  .project-meta { margin-bottom: 6rem; }
+  .lede { max-width: 40rem; font-size: 1.25rem; line-height: 1.3; font-style: italic; }
+  .downloads { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; font-size: .875rem; font-weight: 700; }
+  .downloads a, a:hover, a:focus-visible { color: var(--accent); }
+  section { margin-block: 6rem; font-size: 1.125rem; line-height: 1.45; }
+  section p { text-align: justify; }
+  figure { counter-increment: figure; margin-block: 4rem; }
+  img { display: block; width: 100%; max-height: 48rem; object-fit: contain; }
+  figcaption { margin-top: .75rem; font: 700 .75rem/1.3 Arial, Helvetica, sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+  figcaption::before { content: "Fig. " counter(figure) " — "; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+  th, td { padding: .6rem; border-bottom: 1px solid #b9bdb5; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .itpca { font-weight: 700; }
+  .contents { position: fixed; top: 2rem; left: max(1rem, calc(50% - 48rem)); display: grid; gap: .5rem; width: 12rem; font-size: .875rem; line-height: 1.25; }
+  .contents[hidden] { display: none; }
+  .contents p { margin: 0 0 .25rem; color: var(--accent); font-family: inherit; font-weight: 700; text-transform: uppercase; }
+  .contents a { color: inherit; text-decoration: none; }
+  .contents a.active { color: var(--accent); font-weight: 700; }
+  @media (max-width: 90rem) { .contents { display: none; } }
+</style>
