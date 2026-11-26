@@ -9,7 +9,7 @@ test("homepage, shader, and Amazon project pages are available", async ({ page }
   const navigation = page.getByRole("navigation", { name: "Main navigation" });
   await expect(navigation.getByRole("link", { name: "About" })).toHaveAttribute("href", "/");
   await expect(navigation.getByRole("link", { name: "Projects" })).toHaveAttribute("href", "/projects/");
-  await expect(navigation.getByRole("link", { name: "Curriculum Vitae" })).toHaveAttribute("href", "/cv/");
+  await expect(navigation.getByRole("link", { name: "Curriculum Vitae" })).toHaveAttribute("href", "/documents/MarkDuek_CV_2026.pdf");
   await navigation.getByRole("link", { name: "Projects" }).click();
   await expect(page).toHaveURL(/\/projects\/$/);
 
