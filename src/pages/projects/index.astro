@@ -4,5 +4,88 @@ import SiteLayout from "../../layouts/SiteLayout.astro";
 
 <SiteLayout title="Projects — Mark Duek" description="Projects by Mark Duek.">
   <h1>Projects</h1>
-  <p>Project pages are coming soon.</p>
+  <ol class="project-list">
+    <li><a class="project-card" href="https://markduek.github.io/mark-anomaly-detection-benchmark/"><h2>Multivariate Anomaly Detection Benchmark</h2><p class="project-meta">Research Project, PUC-Rio | Advisor: Prof. Rodrigo de Lamare</p><p class="project-description">Multivariate Time Series Analysis, Benchmarking, Reconstruction Based Subspace Methods Aug. 2026 – Dec. 2026</p></a></li>
+    <li><a class="project-card" href="/projects/information-theoretical-pca/"><h2>Information-Theoretical PCA for Anomaly Detection on Subspaces</h2><p class="project-meta">Final Project for ELE2618 – Information Theory</p><p class="project-description">Statistical Signal Processing, Anomaly Detection Sep. 2025 – Nov. 2025</p></a></li>
+    <li><a class="project-card" href="/projects/lightweight-neural-networks/"><h2>Lightweight Neural Networks for Deforestation Prediction in the Brazilian Amazon</h2><p class="project-meta">Final Project for ENG2346 – Deep Learning</p><p class="project-description">Deep Learning, Spatiotemporal Modeling May 2025 – Jul. 2025</p></a></li>
+    <li><a class="project-card" href="/projects/deforestation-forecasting/"><h2>Deep Learning Model for Forecasting Deforestation in the Brazilian Amazon from Spatiotemporal Data</h2><p class="project-meta">Stone Labs, PUC-Rio</p><p class="project-description">Deep Learning, Time Series, Geospatial Data, Remote Sensing Aug. 2024 – Dec. 2024</p></a></li>
+  </ol>
 </SiteLayout>
+
+<style>
+  :global(body) {
+    background: #f7f6f0;
+    color: #22291e;
+  }
+
+  :global(header),
+  :global(main) {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  :global(a) {
+    color: inherit;
+  }
+
+  h1,
+  h2,
+  .project-meta,
+  .project-description {
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 4rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .project-list {
+    display: grid;
+    gap: 1.5rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid currentColor;
+  }
+
+  .project-card {
+    display: block;
+    padding: 1rem 0;
+    color: inherit;
+    border-bottom: 1px solid currentColor;
+    text-decoration: none;
+  }
+
+  h2,
+  .project-meta,
+  .project-description {
+    margin: 0;
+  }
+
+  h2 {
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+
+  .project-meta {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .project-description {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.2;
+  }
+
+  .project-card:hover,
+  .project-card:focus-visible {
+    color: #b22222;
+    transform: translateX(0.25rem);
+  }
+</style>

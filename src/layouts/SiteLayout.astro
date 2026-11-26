@@ -11,10 +11,9 @@ interface Props {
   <a class="skip-link" href="#main">Skip to content</a>
   <header>
     <nav aria-label="Main navigation">
-      <a href="/">Mark Duek</a>
-      <a href="/about/">About</a>
-      <a href="/projects/">Projects</a>
-      <a href="/cv/">CV</a>
+      <a href="/"><span class="link-label"><span aria-hidden="true">01</span> About</span></a>
+      <a href="/projects/"><span class="link-label"><span aria-hidden="true">02</span> Projects</span></a>
+      <a href="/cv/"><span class="link-label"><span aria-hidden="true">03</span> Curriculum Vitae</span></a>
     </nav>
   </header>
   <main id="main">
@@ -36,7 +35,44 @@ interface Props {
   nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: #22291e;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 900;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
+    text-transform: uppercase;
+  }
+
+  nav a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-block: 0.3rem;
+    color: inherit;
+    text-decoration: none;
+    transition: color 150ms ease, transform 150ms ease;
+  }
+
+  .link-label {
+    display: grid;
+    grid-template-columns: 2ch auto;
+    column-gap: 0.4rem;
+    width: max-content;
+    background: #f7f6f0;
+  }
+
+  nav a:hover,
+  nav a:focus-visible {
+    color: #b22222;
+    transform: scale(1.05);
+  }
+
+  nav a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
   }
 
   main {

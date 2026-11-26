@@ -1,7 +1,6 @@
 ---
 import Document from "../layouts/Document.astro";
 import ShaderCanvas from "../components/ShaderCanvas.astro";
-import deforestationThumbnail from "../assets/projects/deforestation-forecasting/deter-amazonia-legal.png";
 ---
 
 <Document
@@ -29,8 +28,8 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
         proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
       </p>
       <nav aria-label="Main navigation">
-        <a href="/about/"><span class="link-label"><span aria-hidden="true">01</span> About</span></a>
-        <a href="#projects"><span class="link-label"><span aria-hidden="true">02</span> Projects</span></a>
+        <a href="/"><span class="link-label"><span aria-hidden="true">01</span> About</span></a>
+        <a href="/projects/"><span class="link-label"><span aria-hidden="true">02</span> Projects</span></a>
         <a href="/cv/"><span class="link-label"><span aria-hidden="true">03</span> Curriculum Vitae</span></a>
       </nav>
     </section>
@@ -48,15 +47,6 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
         <span>GitHub</span>
       </a>
     </nav>
-    <section class="projects" id="projects" aria-labelledby="projects-title">
-      <header class="projects-header"><h2 id="projects-title">Projects</h2></header>
-      <ol class="project-list">
-        <li><a class="project-card" href="https://markduek.github.io/mark-anomaly-detection-benchmark/"><h3>Anomaly Detection Benchmark</h3><p class="project-meta">Independent work · In progress</p><p class="project-description">Benchmarking anomaly-detection methods.</p></a></li>
-        <li><a class="project-card" href="/projects/information-theoretical-pca/"><h3>Information-Theoretical PCA for Anomaly Detection on Subspaces</h3><p class="project-meta">ELE2618 · Information Theory · Sep.–Nov. 2025</p><p class="project-description">Evaluated subspace methods for network-traffic anomaly detection.</p></a></li>
-        <li><a class="project-card" href="/projects/lightweight-neural-networks/"><h3>Lightweight Neural Networks for Deforestation Prediction in the Brazilian Amazon</h3><p class="project-meta">ENG2346 · Deep Learning · May–Jul. 2025</p><p class="project-description">Built a 3D U-Net for satellite-based deforestation segmentation.</p></a></li>
-        <li><a class="project-card" href="/projects/deforestation-forecasting/"><h3>Deep Learning Model for Deforestation Prediction in the Brazilian Amazon Using Multitemporal Data</h3><p class="project-meta">Stone Labs, PUC-Rio · Deep Learning · Aug.–Dec. 2024</p><p class="project-description">Forecasted deforestation from satellite time-series data.</p><img src={deforestationThumbnail.src} alt="Observed alerts and a predicted deforestation heatmap." /></a></li>
-      </ol>
-    </section>
   </main>
 </Document>
 
@@ -127,7 +117,7 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
 
   .site-label {
     margin: 1rem 0 0;
-    background: #eae8dc;
+    background: #f7f6f0;
     font: 800 0.75rem/1.5 ui-monospace, "SFMono-Regular", Consolas, monospace;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -166,7 +156,7 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
     grid-template-columns: 2ch auto;
     column-gap: 0.4rem;
     width: max-content;
-    background: #eae8dc;
+    background: #f7f6f0;
   }
 
   a:hover,
@@ -179,7 +169,7 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
     position: relative;
     z-index: 3;
     padding: 2rem clamp(1.5rem, 5vw, 5rem);
-    background: #eae8dc;
+    background: #f7f6f0;
     color: #22291e;
     font-family: "Arial Black", Arial, Helvetica, sans-serif;
     font-weight: 900;
@@ -209,88 +199,13 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
     margin-top: 0.5rem;
   }
 
-  .projects {
-    position: relative;
-    z-index: 3;
-    min-height: 100vh;
-    min-height: 100svh;
-    padding: 2rem clamp(1.5rem, 5vw, 5rem);
-    color: #22291e;
-    font-family: "Arial Black", Arial, Helvetica, sans-serif;
-  }
-
-  .projects-header {
-    border-bottom: 1px solid #22291e;
-  }
-
-  .projects h2 {
-    width: max-content;
-    max-width: 100%;
-    margin: 0;
-    background: #eae8dc;
-  }
-
-  .projects h2 {
-    font-size: 1.75rem;
-    line-height: 1;
-    letter-spacing: -0.04em;
-  }
-
-  .project-list {
-    display: grid;
-    gap: 1.5rem;
-    margin: 1.5rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .project-card {
-    display: block;
-    width: 100%;
-    padding: 0.75rem;
-    background: #eae8dc;
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .project-list h3 {
-    margin: 0;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(1rem, 1.5vw, 1.25rem);
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.025em;
-  }
-
-  .project-meta {
-    margin: 0.5rem 0 0;
-    font: 400 0.75rem/1.1 Georgia, "Times New Roman", serif;
-    text-transform: uppercase;
-  }
-
-  .project-description {
-    margin: 0.5rem 0 0;
-    font: 400 0.875rem/1.2 Georgia, "Times New Roman", serif;
-  }
-
-  .project-card img {
-    display: block;
-    width: min(100%, 22rem);
-    margin-top: 0.75rem;
-  }
-
-  .project-card:hover,
-  .project-card:focus-visible {
-    color: #b22222;
-    transform: translateX(0.25rem);
-  }
-
   .social-links {
     width: auto;
     margin: 0;
     padding: 0 clamp(1.5rem, 5vw, 5rem) 2rem;
     justify-content: flex-start;
     gap: 1.5rem;
+    z-index: 4;
     color: #22291e;
     font: 700 0.75rem/1.5 Arial, Helvetica, sans-serif;
   }
@@ -303,7 +218,7 @@ import deforestationThumbnail from "../assets/projects/deforestation-forecasting
 
   .social-links svg,
   .social-links span {
-    background: #eae8dc;
+    background: #f7f6f0;
   }
 
   @media (min-width: 900px) and (min-height: 650px) {
